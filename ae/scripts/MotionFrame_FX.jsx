@@ -176,7 +176,7 @@
         keysP(rp, times, R, "auto");
         keysP(sp, times, Sx, "auto");
         try {
-            pp.expression = 'k=effect("' + nm + '")(1)/100; c=[thisComp.width/2,thisComp.height/2]; c+(value-c)*k';
+            pp.expression = 'k=effect("' + nm + '")(1)/100; c=[thisComp.width/2,thisComp.height/2]; add(c,mul(sub(value,c),k))';
             rp.expression = 'value*effect("' + nm + '")(1)/100';
             sp.expression = '100+(value-100)*effect("' + nm + '")(1)/100';
         } catch (e) {}
@@ -209,7 +209,7 @@
             ' var amp=effect("MF Amp px")(1)*sc; var d=[Math.cos(a),Math.sin(a)];' +
             ' seedRandom(Math.floor(time/thisComp.frameDuration),true);' +
             ' var j=effect("MF Jitter px")(1)*sc*Math.exp(-effect("MF Decay")(1)*t);' +
-            ' value+d*amp*env(t)+[random(-j,j),random(-j,j)];}';
+            ' add(add(value,mul(d,amp*env(t))),[random(-j,j),random(-j,j)]);}';
         var rotE = core +
             'if(n<1){value}else{var t=time-thisLayer.marker.key(n).time; seedRandom(n+99,true);' +
             ' var sg=(random()<0.5)?-1:1; value+sg*effect("MF Rot graus")(1)*env(t);}';
@@ -269,7 +269,7 @@
         var e = EXPR_MARK +
             'posterizeTime(effect("MF Jitter fps")(1));' +
             'if(n<1){value}else{var t=time-thisLayer.marker.key(n).time; var d=effect("MF Duracao frames")(1)*thisComp.frameDuration;' +
-            ' if(t>d){value}else{seedRandom(Math.floor(time*100),true); var a=effect("MF Jitter px")(1)*thisComp.width/1080*(1-t/d); value+[random(-a,a),random(-a,a)];}}';
+            ' if(t>d){value}else{seedRandom(Math.floor(time*100),true); var a=effect("MF Jitter px")(1)*thisComp.width/1080*(1-t/d); add(value,[random(-a,a),random(-a,a)]);}}';
         try { prop(tr, TR.pos).expression = e; } catch (x) {}
         var e2 = EXPR_MARK + 'posterizeTime(effect("MF Jitter fps")(1)); if(n<1){value}else{var t=time-thisLayer.marker.key(n).time; var d=effect("MF Duracao frames")(1)*thisComp.frameDuration; if(t>d){value}else{seedRandom(Math.floor(time*100)+7,true); value+random(-2,2)*(1-t/d);}}';
         try { prop(tr, TR.rot).expression = e2; } catch (x2) {}
