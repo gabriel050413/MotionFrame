@@ -1,0 +1,23 @@
+// ===== SHAKE NO BPM (sem marcadores) =====
+// bpm: E2 ~150, E3 ~190 (ou 95). offset = segundos até a 1ª batida.
+
+// ---------- POSITION ----------
+bpm=150; offset=0; amp=45; pico=3; freq=3.5; decay=9;
+b=60/bpm; tt=time-offset; n=Math.floor(tt/b); t=tt-n*b;
+if(tt<0){value}else{
+ tp=pico*thisComp.frameDuration; sc=Math.min(thisComp.width,thisComp.height)/1080;
+ e=(t<tp)?Math.sin(t/tp*Math.PI/2):Math.cos(2*Math.PI*freq*(t-tp))*Math.exp(-decay*(t-tp));
+ seedRandom(n,true); a=random(0,2*Math.PI); add(value,mul([Math.cos(a),Math.sin(a)],amp*sc*e));
+}
+
+// ---------- ROTATION ----------
+bpm=150; offset=0; rot=2; pico=3; freq=3.5; decay=9;
+b=60/bpm; tt=time-offset; n=Math.floor(tt/b); t=tt-n*b;
+if(tt<0){value}else{ tp=pico*thisComp.frameDuration;
+ e=(t<tp)?Math.sin(t/tp*Math.PI/2):Math.cos(2*Math.PI*freq*(t-tp))*Math.exp(-decay*(t-tp));
+ seedRandom(n+99,true); value+((random()<0.5)?-1:1)*rot*e; }
+
+// ---------- SCALE ----------
+bpm=150; offset=0; punch=12; pico=3; decay=9; base=110;
+b=60/bpm; tt=time-offset; n=Math.floor(tt/b); t=tt-n*b; tp=pico*thisComp.frameDuration;
+s=(tt<0)?base:base+punch*((t<tp)?t/tp:Math.exp(-decay*0.8*(t-tp))); [s,s];

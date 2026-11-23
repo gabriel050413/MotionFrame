@@ -1,0 +1,31 @@
+SHAKES MEDIDOS — COPIAR E COLAR (sem script, sem .ffx)
+
+1. Abra a pasta do tamanho da sua comp (1080x1920 = TikTok/Reels, 1080x1440, 1920x1080).
+2. Abra o .txt do shake (ex: E2_PUNCH_INOUT.txt) no Bloco de Notas / TextEdit.
+3. Ctrl+A e Ctrl+C (copia tudo).
+4. No After Effects: coloque o playhead no corte/batida, selecione o LAYER DO CLIPE
+   (não o Transform, o layer mesmo) e dê Ctrl+V.
+   -> Position, Scale e Rotation recebem os keyframes. A escala já vem com zoom extra para não aparecer borda.
+5. Motion blur: ligue o interruptor de motion blur do layer + o botão de motion blur da comp
+   (ou use RSMB / Pixel Motion Blur por cima).
+
+Dicas
+- Se o clipe já tem escala/posição próprias, pré-componha (Ctrl+Shift+C) e cole os keyframes no pré-comp.
+- Para repetir o shake em outro corte: selecione os keyframes, Ctrl+C, mova o playhead, Ctrl+V.
+- Mais forte/mais fraco: selecione os keyframes de Position e arraste com Alt para mudar o tempo,
+  ou use as expressions da pasta ../expressions (com amp ajustável).
+
+Shakes
+E1_SLAM_BOUNCE      entrada com zoom 119->100% + quique (E1)
+E1_PUSH_KICK        zoom-in + chute para cima/direita (E1)
+E1_WHIP_OUT         tremida + whip lateral de saída (E1)
+E1_RECOIL           recuo curto com tremor (E1)
+E2_PUNCH_INOUT      kick diagonal + zoom in/out (E2)  <- o mais usado
+E2_DROP_ZOOM        queda vertical + zoom (E2)
+E2_WHIP_SNAP        snap horizontal (E2)
+E2_SPIN_ZOOM_INTRO  intro girando + zoom (E2)
+E2_HANDHELD_SWING   balanço de câmera na mão (E2)
+E3_ROTATE_KICK      kick com rotação de 11° (E3)
+E3_SOFT_DROP        drop suave (E3)
+E3_TILT_DRIFT       drift com tilt (E3)
+E3_SMOOTH_PUSH      push-in cinematográfico (E3)

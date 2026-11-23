@@ -1,0 +1,30 @@
+// ===== IMPACT KICK (medido nas edits) — dispara em cada MARCADOR do layer =====
+// Cole cada bloco na propriedade indicada (Alt+clique no cronômetro). Adicione marcadores (tecla * do teclado numérico) nas batidas.
+// Ajuste: amp = px, pico = frames até o pico, freq = oscilação, decay = amortecimento, rot = graus, punch = % de zoom
+
+// ---------- POSITION ----------
+amp=45; pico=3; freq=3.5; decay=9; jit=4;
+n=0; if(marker.numKeys>0){n=marker.nearestKey(time).index; if(marker.key(n).time>time) n--;}
+if(n<1){value}else{
+ t=time-marker.key(n).time; tp=pico*thisComp.frameDuration; sc=Math.min(thisComp.width,thisComp.height)/1080;
+ e=(t<tp)?Math.sin(t/tp*Math.PI/2):Math.cos(2*Math.PI*freq*(t-tp))*Math.exp(-decay*(t-tp));
+ seedRandom(n,true); a=random(0,2*Math.PI);
+ seedRandom(Math.round(time/thisComp.frameDuration),true); j=jit*sc*Math.exp(-decay*t);
+ add(add(value,mul([Math.cos(a),Math.sin(a)],amp*sc*e)),[random(-j,j),random(-j,j)]);
+}
+
+// ---------- ROTATION ----------
+rot=2; pico=3; freq=3.5; decay=9;
+n=0; if(marker.numKeys>0){n=marker.nearestKey(time).index; if(marker.key(n).time>time) n--;}
+if(n<1){value}else{
+ t=time-marker.key(n).time; tp=pico*thisComp.frameDuration;
+ e=(t<tp)?Math.sin(t/tp*Math.PI/2):Math.cos(2*Math.PI*freq*(t-tp))*Math.exp(-decay*(t-tp));
+ seedRandom(n+99,true); sg=(random()<0.5)?-1:1; value+sg*rot*e;
+}
+
+// ---------- SCALE ----------  (base 110% para esconder bordas)
+punch=12; pico=3; decay=9; base=110;
+n=0; if(marker.numKeys>0){n=marker.nearestKey(time).index; if(marker.key(n).time>time) n--;}
+s=base;
+if(n>0){t=time-marker.key(n).time; tp=pico*thisComp.frameDuration; s=base+punch*((t<tp)?t/tp:Math.exp(-decay*0.8*(t-tp)));}
+[s,s];
