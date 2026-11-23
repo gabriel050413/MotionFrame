@@ -689,6 +689,51 @@
         }
     }
 
+    // projeto demo: importa uma foto e cria UMA COMP POR EFEITO + uma comp "00 TODOS" com tudo em sequência
+    function buildDemoProject() {
+        var f = File.openDialog("Escolha a foto (jpg/png) para o projeto demo");
+        if (!f) return;
+        var foot = app.project.importFile(new ImportOptions(f));
+        var folder = app.project.items.addFolder("MotionFrame DEMO");
+        foot.parentFolder = folder;
+        var W = 1080, H = 1440, DUR = 2, HIT = 0.4, comps = [];
+        for (var i = 0; i < PRESETS.length; i++) {
+            var P = PRESETS[i];
+            if (/Velocity/.test(P.name)) continue; // precisa de vídeo, não de foto
+            var num = (comps.length + 1 < 10 ? "0" : "") + (comps.length + 1);
+            var c = app.project.items.addComp(num + " " + P.name, W, H, 1, DUR, 30);
+            c.parentFolder = folder;
+            var ph = c.layers.add(foot);
+            var sc = Math.max(W / foot.width, H / foot.height) * 100;
+            ph.property("ADBE Transform Group").property("ADBE Scale").setValue([sc, sc]);
+            c.time = HIT;
+            var L = null;
+            if (P.adj === "solid") { L = null; }
+            else if (/Text/.test(P.name)) { L = c.layers.addText("THE REACTION"); }
+            else if (/Glow|Rays/.test(P.name)) { L = ph; } // glow vai no próprio sujeito
+            else { L = newAdjustment(c, "MF " + P.name); }
+            try { P.fn(L, c); } catch (e) { log(P.name + ": " + e); }
+            if (L && L.marker && /Kick|Rattle|Bounce|Punch|Jitter/.test(P.name)) {
+                L.marker.setValueAtTime(HIT + 0.8, new MarkerValue("hit 2"));
+            }
+            c.time = 0;
+            comps.push(c);
+        }
+        var all = app.project.items.addComp("00 TODOS OS EFEITOS", W, H, 1, DUR * comps.length, 30);
+        all.parentFolder = folder;
+        for (var j = comps.length - 1; j >= 0; j--) {
+            var l = all.layers.add(comps[j]); l.startTime = j * DUR;
+            var tx = all.layers.addText(comps[j].name); tx.startTime = j * DUR; tx.outPoint = (j + 1) * DUR;
+            try {
+                var td = tx.property("ADBE Text Properties").property("ADBE Text Document"); var d = td.value;
+                d.fontSize = 48; d.fillColor = [1, 1, 0]; d.applyStroke = true; d.strokeColor = [0, 0, 0]; d.strokeWidth = 4; td.setValue(d);
+                tx.property("ADBE Transform Group").property("ADBE Position").setValue([W / 2, 90]);
+            } catch (e2) {}
+        }
+        all.openInViewer();
+        alert(comps.length + " comps criadas na pasta 'MotionFrame DEMO'.\nAbra '00 TODOS OS EFEITOS' e dê File > Save As para ter o .aep.");
+    }
+
     // detecção de batida a partir do áudio da comp -> marcadores (para os shakes por marcador)
     function beatMarkers(comp, sens, minGap) {
         var audio = null;
@@ -757,6 +802,7 @@
         var bB = p3.add("button", undefined, "Marcadores de batida (do áudio selecionado)");
         var g4 = p3.add("group"); g4.add("statictext", undefined, "Timing original:");
         var r1 = g4.add("button", undefined, "E1"), r2 = g4.add("button", undefined, "E2"), r3 = g4.add("button", undefined, "E3");
+        var bD = w.add("button", undefined, "PROJETO DEMO: 1 comp por efeito com uma foto");
         var bM = w.add("button", undefined, "Listar matchNames do layer (debug de plugin)");
 
         function fill() {
@@ -790,6 +836,7 @@
         r1.onClick = function () { run("E1 markers", function () { var c = getComp(); if (c) refMarkers(c, "e1"); }); };
         r2.onClick = function () { run("E2 markers", function () { var c = getComp(); if (c) refMarkers(c, "e2"); }); };
         r3.onClick = function () { run("E3 markers", function () { var c = getComp(); if (c) refMarkers(c, "e3"); }); };
+        bD.onClick = function () { USE_PLUGINS = cb.value; run("Projeto demo", buildDemoProject); };
         bM.onClick = function () { var c = getComp(); if (c && c.selectedLayers.length) dumpMatchNames(c.selectedLayers[0]); };
 
         w.onResizing = w.onResize = function () { this.layout.resize(); };
