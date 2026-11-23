@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>MotionFrame</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="logo">MF</span><div><b>MotionFrame</b><small>v1.0 · AE toolkit</small></div></div>
+  <div class="status"><span id="srvDot" class="dot"></span><span id="srvTxt">IA offline</span>
+    <button class="icon" id="btnSession" title="Tempo de sessão">⏱ <span id="sessTime">00:00</span></button></div>
+</header>
+<input id="search" class="search" placeholder="Pesquisar ferramenta... (ex: anchor, legenda, wiggle)">
+
+<main id="views">
+
+<!-- HOME ------------------------------------------------------------>
+<section class="view active" data-view="home">
+  <div class="hero"><div class="orb">MF</div><h1>MotionFrame</h1><p>Ferramentas rápidas para After Effects em um único painel.</p>
+    <div id="compInfo" class="muted small">—</div></div>
+  <div class="tiles" id="tiles"></div>
+</section>
+
+<!-- LAYER ----------------------------------------------------------->
+<section class="view" data-view="layer">
+  <h2>Layer</h2>
+  <div class="grid3">
+    <button data-layer="null">Null</button><button data-layer="adjustment">Adjustment</button><button data-layer="solid">Solid</button>
+    <button data-layer="camera">Câmera</button><button data-layer="text">Texto</button><button data-layer="precompose">Pre-compor</button>
+    <button data-layer="split">Cortar no CTI</button><button data-layer="trimToCTI_in">Início → CTI</button><button data-layer="trimToCTI_out">Fim → CTI</button>
+    <button data-layer="reverse">Reverter clip</button><button data-layer="freeze">Freeze frame</button><button data-layer="sequence">Sequenciar</button>
+    <button data-layer="motionBlur">Motion blur</button><button data-layer="textToLines">Texto → palavras</button><button id="btnCompFromSel">Comp do footage</button>
+  </div>
+  <h3>Speed ramp (estilo twixtor)</h3>
+  <div class="row"><label>Velocidade lenta <input type="number" id="rampSlow" value="0.25" step="0.05" min="0.05" max="1"></label>
+    <label>Duração (s) <input type="number" id="rampW" value="1" step="0.1"></label></div>
+  <label class="chk"><input type="checkbox" id="rampPM"> Adicionar Timewarp (pixel motion)</label>
+  <button class="primary" id="btnRamp">Aplicar speed ramp no CTI</button>
+  <h3>Nova comp</h3>
+  <div class="grid3">
+    <button data-newcomp="1080x1920">9:16 Reels</button><button data-newcomp="1920x1080">16:9 HD</button><button data-newcomp="1080x1080">1:1</button>
+    <button data-newcomp="3840x2160">4K</button><button data-newcomp="1080x1350">4:5</button><button data-newcomp="2560x1080">Cinema 21:9</button>
+  </div>
+</section>
+
+<!-- KEYFRAMES PROPORCIONAIS ---------------------------------------->
+<section class="view" data-view="keys">
+  <h2>Keyframes proporcionais</h2>
+  <p class="muted">Faz os keyframes (de um preset, efeito ou animação sua) se esticarem/encolherem de acordo com o tamanho do clip.</p>
+  <label>Modo
+    <select id="fitMode">
+      <option value="stretch">Esticar tudo (início → fim do clip)</option>
+      <option value="intro_outro">Intro no início / outro no fim</option>
+      <option value="percent">Ocupar % do clip</option>
+    </select></label>
+  <div class="row"><label>% do clip <input type="number" id="fitPct" value="50" min="1" max="100"></label>
+    <label>Folga início (s) <input type="number" id="padIn" value="0" step="0.05"></label>
+    <label>Folga fim (s) <input type="number" id="padOut" value="0" step="0.05"></label></div>
+  <label class="chk"><input type="checkbox" id="fitOnlySel"> Só propriedades selecionadas</label>
+  <button class="primary" id="btnFit">Encaixar keyframes no clip</button>
+
+  <h3>Presets (.ffx) proporcionais</h3>
+  <p class="muted small">Escolha uma pasta com presets .ffx. Ao aplicar, os keyframes adicionados se ajustam ao clip.</p>
+  <div class="row"><button id="btnPresetFolder">Escolher pasta</button><label class="chk"><input type="checkbox" id="presetProp" checked> Proporcional</label></div>
+  <div id="presetList" class="list"></div>
+</section>
+
+<!-- FLOW ----------------------------------------------------------->
+<section class="view" data-view="flow">
+  <h2>Flow · Curvas</h2>
+  <div class="row"><input id="curveTxt" class="mono" value="0.33, 0.00, 0.67, 1.00"><button id="btnReadCurve" title="Ler curva dos keyframes selecionados">Ler</button></div>
+  <canvas id="curve" width="600" height="400"></canvas>
+  <div class="row"><button class="primary" id="btnApplyCurve">Aplicar</button><button id="btnSaveCurve">Salvar preset</button><button id="btnMirror">Espelhar</button></div>
+  <div class="curves" id="curveList"></div>
+  <p class="muted small">Selecione 2+ keyframes (ou layers inteiras) e clique em Aplicar. Arraste os pontos ciano no gráfico.</p>
+</section>
+
+<!-- MOTION LIBRARY ------------------------------------------------->
+<section class="view" data-view="motion">
+  <h2>Motion Library</h2>
+  <div class="row"><label class="chk"><input type="checkbox" id="motProp" checked> Proporcional ao clip</label>
+    <label>% <input type="number" id="motPct" value="20" min="1" max="100"></label>
+    <label>ou duração (s) <input type="number" id="motDur" value="0.5" step="0.05"></label></div>
+  <div class="tabs" id="motTabs"></div>
+  <div class="cards" id="motCards"></div>
+  <p class="muted small">Transições: selecione 2 clips (aplica no corte) ou nada (aplica no CTI).</p>
+</section>
+
+<!-- LEGENDAS + TRACKING -------------------------------------------->
+<section class="view" data-view="captions">
+  <h2>Legendas automáticas + Face Track</h2>
+  <p class="muted small">Selecione a layer do vídeo na comp. Gera legendas estilo "edit de filme": Arial Bold, deep glow e sombra seguindo a cabeça.</p>
+  <div class="row"><label>Idioma <select id="capLang"><option value="">Auto</option><option value="pt">Português</option><option value="en">Inglês</option><option value="es">Espanhol</option><option value="fr">Francês</option><option value="de">Alemão</option><option value="ja">Japonês</option><option value="ar">Árabe</option></select></label>
+    <label>Modelo <select id="capModel"><option>tiny</option><option>base</option><option selected>small</option><option>medium</option><option>large-v3</option></select></label>
+    <label>Palavras/legenda <input type="number" id="capWords" value="3" min="1" max="12"></label></div>
+  <label class="chk"><input type="checkbox" id="capTranslate"> Traduzir para inglês</label>
+  <h3>Estilo</h3>
+  <div class="row"><label>Fonte <input id="capFont" value="Arial-BoldMT"></label><label>Tamanho <input type="number" id="capSize" value="60"></label>
+    <label>Cor <input type="color" id="capColor" value="#ffffff"></label></div>
+  <div class="row"><label class="chk"><input type="checkbox" id="capGlow" checked> Deep glow</label><label class="chk"><input type="checkbox" id="capShadow" checked> Sombra</label>
+    <label class="chk"><input type="checkbox" id="capUpper"> MAIÚSCULAS</label><label>Contorno <input type="number" id="capStroke" value="0" min="0"></label>
+    <label>Anim <select id="capAnim"><option value="pop">Pop</option><option value="fade">Fade</option><option value="none">Nenhuma</option></select></label></div>
+  <h3>Seguir a cabeça</h3>
+  <div class="row"><label class="chk"><input type="checkbox" id="capTrack" checked> Face tracking automático</label>
+    <label>Offset X <input type="number" id="capOffX" value="0"></label><label>Offset Y <input type="number" id="capOffY" value="220"></label>
+    <label>Precisão <select id="capStep"><option value="1">Todo frame</option><option value="2" selected>1 a cada 2</option><option value="4">1 a cada 4</option></select></label></div>
+  <button class="primary" id="btnCaptions">Gerar legendas</button>
+  <button id="btnTrackOnly">Só face track (cria null "MF Face Track")</button>
+  <div class="progress"><div id="capBar"></div></div><div id="capMsg" class="muted small"></div>
+  <details><summary>Editar texto antes de criar</summary><textarea id="capEdit" class="mono" rows="8" placeholder="Depois da transcrição, edite aqui (formato: inicio|fim|texto) e clique em Criar."></textarea><button id="btnCapCreate">Criar a partir do texto</button></details>
+</section>
+
+<!-- EXPRESSÕES ----------------------------------------------------->
+<section class="view" data-view="expr">
+  <h2>Expressões</h2>
+  <div class="row"><button id="btnCopyExpr" class="primary">Copiar expressões da seleção</button><button id="btnClearExpr">Limpar expressões</button></div>
+  <div class="tabs" id="exprTabs"></div>
+  <div id="exprList" class="list"></div>
+  <h3>Editor</h3>
+  <input id="exprName" placeholder="Nome">
+  <textarea id="exprCode" class="mono" rows="6" placeholder="// cole ou edite uma expressão"></textarea>
+  <div class="row"><label>Alvo <select id="exprTarget"><option value="position">Position</option><option value="scale">Scale</option><option value="rotation">Rotation</option><option value="opacity">Opacity</option><option value="sourceText">Source Text</option><option value="anchor">Anchor</option></select></label>
+    <button class="primary" id="btnApplyExpr">Aplicar</button><button id="btnSaveExpr">Salvar em "Minhas"</button></div>
+</section>
+
+<!-- IA: BACKGROUND / PESSOAS --------------------------------------->
+<section class="view" data-view="ai">
+  <h2>Remover fundo</h2>
+  <p class="muted small">Usa o frame atual (CTI) da comp. O resultado é importado como PNG acima das layers.</p>
+  <div class="chips" id="partChips"></div>
+  <div class="row"><input id="partPrompt" placeholder="ou digite: ex. 'cachorro', 'braço + mão', 'camisa'"></div>
+  <div class="row"><label class="chk"><input type="checkbox" id="bgInvert"> Remover a parte (em vez de manter)</label>
+    <label>Suavizar borda <input type="number" id="bgFeather" value="0" min="0" step="0.5"></label>
+    <label class="chk"><input type="checkbox" id="bgMask"> Salvar máscara</label></div>
+  <button class="primary" id="btnRemoveBg">Remover fundo do frame</button>
+  <button id="btnRemoveBgFile">…de um arquivo de imagem</button>
+
+  <h2>Remover pessoas / objetos</h2>
+  <div class="row"><input id="inpTarget" value="pessoas" placeholder="o que remover: pessoas, carro, texto, logo..."><label>Expandir <input type="number" id="inpGrow" value="15"></label></div>
+  <button class="primary" id="btnInpaint">Remover com IA (frame atual)</button>
+  <button id="btnInpaintFile">…de um arquivo de imagem</button>
+  <div class="progress"><div id="aiBar"></div></div><div id="aiMsg" class="muted small"></div>
+</section>
+
+<!-- MEDIA DOWNLOADER ----------------------------------------------->
+<section class="view" data-view="media">
+  <h2>Baixar mídia</h2>
+  <div class="row"><input id="dlUrl" placeholder="Cole o link (YouTube, TikTok, Instagram, X, Vimeo...) ou pesquise"><button class="primary" id="btnDl">⬇</button></div>
+  <div class="row"><label>Formato <select id="dlFmt"><option value="mp4">MP4 vídeo</option><option value="mp3">MP3 áudio</option><option value="wav">WAV áudio</option></select></label>
+    <label>Qualidade <select id="dlH"><option>2160</option><option selected>1080</option><option>720</option><option>480</option></select></label>
+    <label class="chk"><input type="checkbox" id="dlImport" checked> Importar na comp</label></div>
+  <div class="row"><button id="btnDlFolder">Pasta de destino</button><span id="dlFolder" class="muted small">padrão: ~/MotionFrame/Downloads</span></div>
+  <div class="progress"><div id="dlBar"></div></div><div id="dlMsg" class="muted small"></div>
+  <div id="dlResults" class="results"></div>
+  <h3>Recentes</h3><div id="dlHistory" class="list"></div>
+  <p class="muted small">Baixe apenas conteúdo que você tem direito de usar.</p>
+</section>
+
+<!-- ALIGN / ANCHOR ------------------------------------------------->
+<section class="view" data-view="align">
+  <h2>Anchor point</h2>
+  <div class="anchor" id="anchorGrid"></div>
+  <h2>Alinhar à comp</h2>
+  <div class="grid3">
+    <button data-align='{"h":"left"}'>⇤ Esquerda</button><button data-align='{"h":"center"}'>↔ Centro H</button><button data-align='{"h":"right"}'>Direita ⇥</button>
+    <button data-align='{"v":"top"}'>⤒ Topo</button><button data-align='{"v":"center"}'>↕ Centro V</button><button data-align='{"v":"bottom"}'>Base ⤓</button>
+  </div>
+  <button class="primary" data-align='{"h":"center","v":"center"}'>Centralizar tudo</button>
+  <h2>Ajustar à comp</h2>
+  <div class="grid3"><button data-fit="fit">Fit</button><button data-fit="fill">Fill</button><button data-fit="width">Largura</button><button data-fit="height">Altura</button></div>
+</section>
+
+<!-- EFEITOS -------------------------------------------------------->
+<section class="view" data-view="effects">
+  <h2>Efeitos</h2>
+  <div class="chips" id="fxChips"></div>
+  <div class="row"><input id="fxName" placeholder="Nome/matchName do efeito"><button id="btnAddFx">Adicionar</button><button id="btnRemoveFx">Remover todos</button></div>
+  <h2>Criar efeito próprio</h2>
+  <p class="muted small">Monte efeitos numa layer (valores, keyframes e expressões) e salve como um efeito seu. Aplicar recria tudo em outras layers.</p>
+  <div class="row"><input id="myFxName" placeholder="Nome do seu efeito"><button class="primary" id="btnCaptureFx">Salvar da layer</button></div>
+  <label class="chk"><input type="checkbox" id="myFxProp" checked> Keyframes proporcionais ao clip ao aplicar</label>
+  <div id="myFxList" class="list"></div>
+  <h2>Color (CC)</h2>
+  <label class="chk"><input type="checkbox" id="ccAdj" checked> Como adjustment layer</label>
+  <div class="grid3" id="ccGrid"></div>
+</section>
+
+<!-- ORGANIZADOR ---------------------------------------------------->
+<section class="view" data-view="organize">
+  <h2>Organizador de projeto</h2>
+  <p class="muted small">Lê o projeto, identifica cada layer (texto, shape, vídeo, imagem, áudio, null, adjustment...), renomeia, colore e pré-compõe.</p>
+  <label>Escopo <select id="orgScope"><option value="active">Comp ativa</option><option value="all">Todas as comps</option></select></label>
+  <label class="chk"><input type="checkbox" id="orgRename" checked> Renomear layers (ex: "TXT | Título")</label>
+  <label class="chk"><input type="checkbox" id="orgColor" checked> Cor por tipo</label>
+  <label class="chk"><input type="checkbox" id="orgFolders" checked> Organizar painel Project em pastas</label>
+  <label class="chk"><input type="checkbox" id="orgUnused"> Remover footage não usado</label>
+  <label>Pré-compor <select id="orgPrecomp"><option value="none">Não</option><option value="runs" selected>Grupos vizinhos do mesmo tipo</option><option value="type">Tudo por tipo (pode mudar a ordem)</option></select></label>
+  <button class="primary" id="btnOrganize">Organizar</button>
+  <div id="orgReport" class="report"></div>
+  <div class="legend">
+    <span style="--c:#e8d84a">Texto</span><span style="--c:#5b8fd8">Shape</span><span style="--c:#9b6ad1">Vídeo</span><span style="--c:#4ab07a">Imagem</span>
+    <span style="--c:#d8a14a">Áudio</span><span style="--c:#d44">Null</span><span style="--c:#d77eb5">Adjust</span><span style="--c:#a87a50">Precomp</span>
+  </div>
+</section>
+
+<!-- RENDER / SESSION / MAIS ---------------------------------------->
+<section class="view" data-view="render">
+  <h2>Render</h2>
+  <div class="grid3"><button data-render="h264">MP4/H.264</button><button data-render="prores">ProRes</button><button data-render="png">PNG seq</button></div>
+  <label class="chk"><input type="checkbox" id="rndStart"> Renderizar imediatamente</label>
+  <h2>Sessão</h2>
+  <div class="stats"><div><b id="stToday">0m</b><small>hoje</small></div><div><b id="stMonth">0h</b><small>mês</small></div><div><b id="stYear">0h</b><small>ano</small></div></div>
+  <h2>Servidor de IA</h2>
+  <div id="health" class="report small"></div>
+  <div class="row"><button id="btnStartSrv" class="primary">Iniciar servidor</button><button id="btnHealth">Verificar</button></div>
+  <label>Python <input id="pyPath" placeholder="python3 (ou caminho completo)"></label>
+</section>
+
+</main>
+
+<nav class="bottom" id="nav">
+  <button data-go="home" title="Início">⌂</button>
+  <button data-go="layer" title="Layer">▤</button>
+  <button data-go="keys" title="Keyframes proporcionais">◆</button>
+  <button data-go="flow" title="Flow">∫</button>
+  <button data-go="motion" title="Motion Library">✦</button>
+  <button data-go="captions" title="Legendas + Tracking">CC</button>
+  <button data-go="expr" title="Expressões">{ }</button>
+  <button data-go="ai" title="IA: fundo / pessoas">✂</button>
+  <button data-go="media" title="Baixar mídia">⬇</button>
+  <button data-go="align" title="Anchor / alinhar">✛</button>
+  <button data-go="effects" title="Efeitos / CC">fx</button>
+  <button data-go="organize" title="Organizador">☰</button>
+  <button data-go="render" title="Render / sessão">▶</button>
+</nav>
+<div id="toast"></div>
+
+<script src="js/cep.js"></script>
+<script src="js/data.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

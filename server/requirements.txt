@@ -1,0 +1,20 @@
+# Núcleo (download + face tracking básico)
+yt-dlp>=2024.10.0
+opencv-python>=4.8
+Pillow>=10.0
+numpy>=1.24
+
+# Legendas automáticas
+faster-whisper>=1.0.0
+imageio-ffmpeg>=0.5   # ffmpeg embutido (se não houver ffmpeg no PATH)
+
+# Face tracking mais preciso (opcional; sem ele usa OpenCV Haar)
+mediapipe>=0.10,<0.11 ; python_version < "3.13"
+
+# Remover fundo / partes do corpo
+rembg[cpu]>=2.0.50
+transformers>=4.40
+torch>=2.1
+
+# Remover pessoas (inpainting LaMa; sem ele usa OpenCV)
+simple-lama-inpainting>=0.1.2
