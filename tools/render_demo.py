@@ -251,7 +251,7 @@ def _(img, i):
 @fx('Text Shake + Glow', '"THE REACTION"')
 def _(img, i):
     o = img.copy(); r = np.random.RandomState(i // 2); j = 4 * K
-    t = np.zeros_like(o); cv2.putText(t, 'THE REACTION', (int(W * .2 + r.uniform(-j, j)), int(H * .5 + r.uniform(-j, j))), cv2.FONT_HERSHEY_DUPLEX, 1.5, (1, 1, 1), 3, cv2.LINE_AA)
+    t = np.zeros((H, W, 3), np.uint8); cv2.putText(t, 'THE REACTION', (int(W * .2 + r.uniform(-j, j)), int(H * .5 + r.uniform(-j, j))), cv2.FONT_HERSHEY_DUPLEX, 1.5, (255, 255, 255), 3, cv2.LINE_AA); t = t.astype(np.float32) / 255
     return np.maximum(o, t) + cv2.GaussianBlur(t, (0, 0), 8) * .9
 
 def label(frame, k, name, desc):
