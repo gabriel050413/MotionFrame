@@ -442,3 +442,15 @@ button.primary:hover { background: linear-gradient(120deg, #7a5cff, #a95cff); bo
 .sq.m-tr_dzoom { animation: trA 2s ease infinite; } .sq2.m-tr_dzoom { animation: trZO 2s ease infinite; }
 .sq.m-tr_zrot { animation: trA 2s ease infinite; } .sq2.m-tr_zrot { animation: trSp 2s ease infinite; }
 .sq.m-tr_pan { animation: trSA 2s ease infinite; } .sq2.m-tr_pan { animation: trSB 2s ease infinite; }
+
+/* Outro Maker */
+.ogrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 7px; margin: 6px 0 10px; }
+.ocard { border-radius: 12px; overflow: hidden; cursor: pointer; background: rgba(255,255,255,.035); border: 1px solid var(--line); }
+.ocard:hover { border-color: rgba(124,92,255,.6); } .ocard.on { border-color: #8f72ff; box-shadow: 0 0 0 1px rgba(143,114,255,.6) inset; }
+.ocard img, .ocard .ph { display: block; width: 100%; aspect-ratio: 16/9; object-fit: cover; background: #0b0914; }
+.ocard .ph { display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at 30% 20%, rgba(124,92,255,.5), transparent 60%), radial-gradient(ellipse at 80% 90%, rgba(63,232,255,.3), transparent 60%), #0b0914; }
+.ocard .ph b { font-size: 20px; letter-spacing: .1em; color: rgba(255,255,255,.85); }
+.otexts { display: flex; flex-direction: column; gap: 6px; max-height: 320px; overflow-y: auto; }
+.otexts textarea { font-size: 12px; }
+.warnbox { padding: 7px 9px; border-radius: 9px; background: rgba(255,194,77,.1); border: 1px solid rgba(255,194,77,.35); color: #ffd27a; font-size: 11px; }
+#outroEdit > b { font-size: 13px; }

@@ -610,7 +610,10 @@ def fetch_link(url, folder, progress):
         import gdown  # pip install gdown
         if "/folders/" in u:
             progress(5, "Baixando pasta do Google Drive...")
-            gdown.download_folder(u, output=folder, quiet=True, remaining_ok=True)
+            try:
+                gdown.download_folder(u, output=folder, quiet=True, remaining_ok=True)
+            except TypeError:  # gdown >= 5.2 não tem mais remaining_ok
+                gdown.download_folder(u, output=folder, quiet=True)
             return folder
         progress(5, "Baixando do Google Drive...")
         return gdown.download(u, output=folder + os.sep, quiet=True, fuzzy=True)

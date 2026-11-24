@@ -104,6 +104,28 @@
   <div id="missingList" class="list tall"></div>
 </section>
 
+<!-- OUTRO MAKER ---------------------------------------------------->
+<section class="view" data-view="outro">
+  <div class="head"><span class="ico" data-i="film"></span><div><h2>Outro Maker</h2><p>Escolha um outro, edite os textos e coloque no fim da sua edição.</p></div></div>
+  <div class="row"><div class="cmd mini-cmd grow"><span class="ico" data-i="search"></span><input id="outroSearch" placeholder="Buscar outro…"></div><span id="outroCount" class="muted small"></span></div>
+  <div class="ogrid" id="outroGrid"></div>
+  <div id="outroZips" class="list"></div>
+  <div class="glass pad" id="outroEdit" hidden>
+    <b id="outroSel"></b>
+    <button class="primary" id="btnOutroImport"><span class="ico" data-i="download"></span>Importar no projeto</button>
+    <div class="row"><input id="outroHandle" placeholder="@seuperfil"><button id="btnOutroHandle">Trocar @</button></div>
+    <div id="outroTexts" class="otexts"></div>
+    <div class="row"><button id="btnOutroApply" class="grow" disabled>Aplicar textos</button><button id="btnOutroThumb" class="adv" disabled>Gerar miniatura</button></div>
+    <label class="tg adv"><input type="checkbox" id="outroFit" checked><span></span>Ajustar ao tamanho da comp</label>
+    <button class="primary" id="btnOutroAdd" disabled>Colocar no fim da edição</button>
+  </div>
+  <h3>Adicionar outros</h3>
+  <div class="grid3"><button id="btnOutroFolder"><span class="ico" data-i="folder"></span>Pasta</button><button id="btnOutroZip"><span class="ico" data-i="box"></span>.zip/.rar</button><button id="btnOutroRescan">Atualizar</button></div>
+  <div class="row"><input id="outroLink" placeholder="Link do Google Drive / Dropbox com outros"><button id="btnOutroLink"><span class="ico" data-i="link"></span></button></div>
+  <div class="progress"><div id="outroBar"></div></div><div id="outroMsg" class="muted small"></div>
+  <div id="outroSources" class="list adv"></div>
+</section>
+
 <!-- LAYER ----------------------------------------------------------->
 <section class="view" data-view="layer">
   <div class="head"><span class="ico" data-i="layers"></span><div><h2>Layer</h2><p>Atalhos de criação, corte e tempo.</p></div></div>
@@ -326,6 +348,7 @@
 <script src="js/main.js"></script>
 <script src="js/magic.js"></script>
 <script src="js/library.js"></script>
+<script src="js/outro.js"></script>
 <script src="js/i18n.js"></script>
 </body>
 </html>

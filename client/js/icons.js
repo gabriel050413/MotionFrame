@@ -23,7 +23,8 @@
     save: "M5 4h11l3 3v13H5zM8 4v5h7V4M8 20v-6h8v6",
     eraser: "M15 4.5 20 9.5 11 18.5H6l-2.5-2.5zM9.5 10l5 5M11 18.5h9",
     replace: "M4 8h12l-3-3M20 16H8l3 3",
-    check: "M5 12.5 10 17 19 7"
+    check: "M5 12.5 10 17 19 7",
+    film: "M4 5.5h16v13H4zM8 5.5v13M16 5.5v13M4 9.5h4M4 14.5h4M16 9.5h4M16 14.5h4"
   };
   function svg(name) {
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="' + (P[name] || P.sparkle) + '"/></svg>';
@@ -42,6 +43,7 @@
     ["keys", "diamond", "Keyframes no clip"],
     ["flow", "curve", "Curvas (Flow)"],
     ["expr", "braces", "Expressões"],
+    ["outro", "film", "Outro Maker"],
     "-",
     ["captions", "cc", "Legendas automáticas"],
     ["ai", "wand", "Remover fundo / pessoas"],

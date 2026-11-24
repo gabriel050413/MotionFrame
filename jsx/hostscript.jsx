@@ -1985,3 +1985,122 @@ function mf_projectTool(arg) {
         return ok(r);
     });
 }
+
+
+/* ================================================================== */
+/* OUTRO MAKER \u2014 importa templates .aep, acha a comp principal,        */
+/* lista/edita os textos, gera miniatura e coloca no fim da edicao     */
+/* ================================================================== */
+function itemsInFolder(folder, out) {
+    var i, it;
+    for (i = 1; i <= folder.numItems; i++) {
+        it = folder.item(i);
+        if (it instanceof FolderItem) itemsInFolder(it, out); else out.push(it);
+    }
+    return out;
+}
+/* comp principal: a que nao e usada dentro de outra comp; desempata por nome e tamanho */
+function mainCompOf(items) {
+    var comps = [], i, best = null, bestScore = -1;
+    for (i = 0; i < items.length; i++) if (items[i] instanceof CompItem) comps.push(items[i]);
+    for (i = 0; i < comps.length; i++) {
+        var c = comps[i], used = c.usedIn.length > 0;
+        var score = (used ? 0 : 1000) + c.duration * 2 + (c.numLayers / 10);
+        if (/outro|main|final|render|edit|principal/i.test(c.name)) score += 300;
+        if (/precomp|pre-comp|asset|element|text|logo/i.test(c.name)) score -= 100;
+        if (score > bestScore) { bestScore = score; best = c; }
+    }
+    return best;
+}
+function collectTexts(comp, depth, out, seen) {
+    var i, ly;
+    if (depth > 3 || seen[comp.id]) return out;
+    seen[comp.id] = true;
+    for (i = 1; i <= comp.numLayers && out.length < 40; i++) {
+        ly = comp.layer(i);
+        if (ly instanceof TextLayer) {
+            var txt = "";
+            try { txt = String(ly.property("ADBE Text Properties").property("ADBE Text Document").value.text); } catch (e) {}
+            out.push({ comp: comp.id, compName: comp.name, index: i, name: ly.name, text: txt.replace(/\r/g, "\n") });
+        } else if (ly.source && ly.source instanceof CompItem) collectTexts(ly.source, depth + 1, out, seen);
+    }
+    return out;
+}
+function outroInfo(c) {
+    return { compId: c.id, compName: c.name, w: c.width, h: c.height, fps: c.frameRate, dur: c.duration, texts: collectTexts(c, 0, [], {}) };
+}
+/* arg: {path, name} */
+function mf_outroImport(arg) {
+    return undo("Outro Maker", function () {
+        var o = parseArg(arg), f = new File(o.path);
+        if (!f.exists) throw new Error("Arquivo n\u00e3o existe: " + o.path);
+        var io = new ImportOptions(f); io.importAs = ImportAsType.PROJECT;
+        var imported = app.project.importFile(io);
+        var root = getFolderIn(app.project.rootFolder, "MT Outros");
+        imported.parentFolder = root;
+        if (o.name) { try { imported.name = o.name; } catch (e) {} }
+        var main = mainCompOf(itemsInFolder(imported, []));
+        if (!main) throw new Error("Nenhuma composi\u00e7\u00e3o encontrada no template.");
+        main.openInViewer();
+        var info = outroInfo(main);
+        info.missing = 0; info.prevCompId = prevId;
+        var all = itemsInFolder(imported, []), i;
+        for (i = 0; i < all.length; i++) if (all[i] instanceof FootageItem && all[i].footageMissing) info.missing++;
+        return ok(info);
+    });
+}
+function mf_outroInfo(arg) {
+    try { var o = parseArg(arg), c = itemById(o.compId); if (!c) throw new Error("Comp do outro n\u00e3o encontrada."); return ok(outroInfo(c)); }
+    catch (e) { return fail(e); }
+}
+/* arg: {items:[{comp, index, text}]} \u2014 troca o texto mantendo fonte/estilo */
+function mf_outroSetTexts(arg) {
+    return undo("Outro Maker: textos", function () {
+        var o = parseArg(arg), n = 0, i;
+        for (i = 0; i < o.items.length; i++) {
+            var it = o.items[i], c = itemById(it.comp); if (!c) continue;
+            var ly = c.layer(it.index); if (!(ly instanceof TextLayer)) continue;
+            var sp = ly.property("ADBE Text Properties").property("ADBE Text Document");
+            var newText = String(it.text).replace(/\n/g, "\r");
+            if (sp.numKeys > 0) {
+                for (var k = 1; k <= sp.numKeys; k++) { var kv = sp.keyValue(k); kv.text = newText; sp.setValueAtKey(k, kv); }
+            } else { var td = sp.value; td.text = newText; sp.setValue(td); }
+            n++;
+        }
+        return ok({ count: n });
+    });
+}
+/* arg: {compId, path, at (0-1)} */
+function mf_outroThumb(arg) {
+    try {
+        var o = parseArg(arg), c = itemById(o.compId);
+        if (!c) throw new Error("Comp do outro n\u00e3o encontrada.");
+        var f = new File(o.path); if (f.exists) f.remove();
+        var t = c.duration * (o.at || 0.6);
+        if (typeof c.saveFrameToPng !== "function") throw new Error("Este After Effects n\u00e3o exporta miniaturas por script.");
+        c.saveFrameToPng(t, f);
+        var waited = 0; while (!f.exists && waited < 20000) { $.sleep(100); waited += 100; }
+        return ok({ path: o.path });
+    } catch (e) { return fail(e); }
+}
+/* arg: {compId, fit} \u2014 coloca o outro no fim da comp ativa */
+function mf_outroAddToEdit(arg) {
+    return undo("Outro Maker: adicionar", function () {
+        var o = parseArg(arg), outro = itemById(o.compId), comp = o.targetId ? itemById(o.targetId) : app.project.activeItem;
+        if (!outro) throw new Error("Comp do outro n\u00e3o encontrada.");
+        if (!comp || !(comp instanceof CompItem) || comp === outro) throw new Error("Abra a composi\u00e7\u00e3o da sua edi\u00e7\u00e3o (n\u00e3o a do outro) e tente de novo.");
+        var end = 0, i;
+        for (i = 1; i <= comp.numLayers; i++) if (comp.layer(i).outPoint > end && comp.layer(i).enabled) end = comp.layer(i).outPoint;
+        if (end >= comp.duration - comp.frameDuration) end = Math.min(comp.time, comp.duration);
+        var ly = comp.layers.add(outro);
+        ly.startTime = end;
+        if (end + outro.duration > comp.duration) comp.duration = end + outro.duration;
+        if (o.fit !== false && (outro.width !== comp.width || outro.height !== comp.height)) {
+            var s = Math.max(comp.width / outro.width, comp.height / outro.height) * 100;
+            ly.property("ADBE Transform Group").property("ADBE Scale").setValue([s, s]);
+        }
+        ly.label = 9;
+        comp.time = end;
+        return ok({ at: end });
+    });
+}

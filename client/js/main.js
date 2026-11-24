@@ -53,6 +53,7 @@
     { g: "Animar", v: "motion", i: "sparkle", t: "Biblioteca", d: "Texto animado, caixas, elementos, transições", k: "motion bro animation composer mister horse animacao transicao shake glitch zoom pop texto preset caixa elemento social seta" },
     { g: "Animar", v: "keys", i: "diamond", t: "Keyframes no clip", d: "Ajusta a animação ao tamanho do clip", k: "keyframe proporcional preset ffx esticar" },
     { g: "Animar", v: "flow", i: "curve", t: "Curvas (Flow)", d: "Suavize os keyframes", k: "flow curva ease bezier grafico speed" },
+    { g: "Animar", v: "outro", i: "film", t: "Outro Maker", d: "Templates de outro prontos para editar", k: "outro ending final encerramento template edited by creditos" },
     { g: "Animar", v: "expr", i: "braces", t: "Expressões", d: "Wiggle, loop, typewriter…", k: "expressao expression wiggle loop typewriter" },
     { g: "IA", v: "captions", i: "cc", t: "Legendas automáticas", d: "Com glow seguindo a cabeça", k: "legenda caption subtitle whisper tracking rosto cabeca" },
     { g: "IA", v: "ai", i: "wand", t: "Remover fundo / pessoas", d: "Do frame atual", k: "fundo background remover pessoa ia inpaint corpo braco cabeca" },
