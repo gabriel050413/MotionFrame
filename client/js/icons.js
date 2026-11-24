@@ -38,7 +38,7 @@
     ["media", "download", "Baixar vídeo/música"],
     ["missing", "alert", "Mídias ausentes"],
     "-",
-    ["motion", "sparkle", "Animações"],
+    ["motion", "sparkle", "Biblioteca"],
     ["keys", "diamond", "Keyframes no clip"],
     ["flow", "curve", "Curvas (Flow)"],
     ["expr", "braces", "Expressões"],

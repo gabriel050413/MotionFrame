@@ -50,7 +50,7 @@
     { g: "Importar", v: "pack", i: "box", t: "Presets .ffx", d: "Cria um projeto com todos os presets", k: "ffx preset projeto automatico zip rar salvar exportar" },
     { g: "Importar", v: "media", i: "download", t: "Baixar vídeo/música", d: "YouTube, TikTok, Instagram…", k: "download baixar youtube tiktok instagram media musica" },
     { g: "Importar", v: "missing", i: "alert", t: "Mídias ausentes", d: "Encontre e substitua arquivos offline", k: "missing midia ausente offline relink substituir" },
-    { g: "Animar", v: "motion", i: "sparkle", t: "Animações", d: "Entradas, saídas, transições, shake", k: "motion bro animacao transicao shake glitch zoom pop texto" },
+    { g: "Animar", v: "motion", i: "sparkle", t: "Biblioteca", d: "Texto animado, caixas, elementos, transições", k: "motion bro animation composer mister horse animacao transicao shake glitch zoom pop texto preset caixa elemento social seta" },
     { g: "Animar", v: "keys", i: "diamond", t: "Keyframes no clip", d: "Ajusta a animação ao tamanho do clip", k: "keyframe proporcional preset ffx esticar" },
     { g: "Animar", v: "flow", i: "curve", t: "Curvas (Flow)", d: "Suavize os keyframes", k: "flow curva ease bezier grafico speed" },
     { g: "Animar", v: "expr", i: "braces", t: "Expressões", d: "Wiggle, loop, typewriter…", k: "expressao expression wiggle loop typewriter" },
@@ -281,25 +281,18 @@
   curveList();
 
   /* ---------------- MOTION LIBRARY ---------------- */
-  var motCat = "Entrada";
-  function motionUI() {
-    var cats = []; D.motion.forEach(function (m) { if (cats.indexOf(m.cat) < 0) cats.push(m.cat); });
-    $("#motTabs").innerHTML = cats.map(function (c) { return '<button data-cat="' + c + '" class="' + (c === motCat ? "on" : "") + '">' + c + "</button>"; }).join("");
-    $$("#motTabs button").forEach(function (b) { b.onclick = function () { motCat = b.dataset.cat; motionUI(); }; });
-    var list = D.motion.filter(function (m) { return m.cat === motCat; });
-    $("#motCards").innerHTML = list.map(function (m) { return '<button class="card" data-id="' + m.id + '"><i>' + m.icon + "</i><span>" + m.name + "</span></button>"; }).join("");
-    $$("#motCards .card").forEach(function (b) {
-      b.onclick = function () { run("mf_applyMotion", { id: b.dataset.id, proportional: chk("motProp"), percent: num("motPct"), dur: num("motDur") }, b.textContent + " ✓"); };
-    });
-  }
-  motionUI();
+  /* Biblioteca (animações, presets de texto, elementos): ver js/library.js */
 
   /* ---------------- LEGENDAS + FACE TRACK ---------------- */
   var lastCaps = null, lastMedia = null, lastTrack = null;
   function hexToRgb(h) { return [parseInt(h.substr(1, 2), 16) / 255, parseInt(h.substr(3, 2), 16) / 255, parseInt(h.substr(5, 2), 16) / 255]; }
   function capStyle() {
-    return { font: val("capFont"), size: num("capSize"), color: hexToRgb(val("capColor")), glow: chk("capGlow"), shadow: chk("capShadow"),
+    var st = window.MT_CAPTPL ? window.MT_CAPTPL() : {};
+    var form = { font: val("capFont"), size: num("capSize"), color: hexToRgb(val("capColor")), glow: chk("capGlow"), shadow: chk("capShadow"),
       upper: chk("capUpper"), stroke: num("capStroke"), anim: val("capAnim") };
+    for (var k in form) st[k] = form[k];
+    if (!chk("capTrack") && st.y === undefined) st.y = 0.8;
+    return st;
   }
   function mediaRange(m) {
     // trecho da mídia visível na comp (em tempo da mídia)
@@ -309,7 +302,10 @@
   function createCaps(segments) {
     var arg = { segments: segments, media: lastMedia, style: capStyle(), offset: [num("capOffX"), num("capOffY")] };
     if (chk("capTrack") && lastTrack) arg.track = lastTrack;
-    return run("mf_createCaptions", arg, function (r) { return r.count + " legendas criadas"; });
+    return run("mf_createCaptions", arg, function (r) { return r.count + " legendas criadas"; }).then(function (r) {
+      if (r.errors && r.errors.length) { $("#capMsg").textContent = r.errors[0]; }
+      return r;
+    });
   }
   $("#btnCaptions").onclick = function () {
     $("#capBar").style.width = "0%";
@@ -362,7 +358,7 @@
     $$("#exprList .item").forEach(function (it) {
       var e = list[+it.dataset.i];
       it.onclick = function () { $("#exprName").value = e.name; $("#exprCode").value = e.expr; if (e.target && $('#exprTarget option[value="' + e.target + '"]')) $("#exprTarget").value = e.target; };
-      $(".mini", it).onclick = function (ev) { ev.stopPropagation(); run("mf_applyExpression", { expr: e.expr, target: e.target }, "Expressão aplicada: " + e.name); };
+      $(".mini", it).onclick = function (ev) { ev.stopPropagation(); applyExpr({ expr: e.expr, target: e.target }, "Expressão aplicada: " + e.name); };
       var del = $(".del", it);
       if (del) del.onclick = function (ev) {
         ev.stopPropagation(); var key = e.cat === "Minhas" ? "myExpr" : "copiedExpr", arr = store.get(key, []);
@@ -385,7 +381,14 @@
     });
   };
   $("#btnClearExpr").onclick = function () { run("mf_clearExpressions", null, function (r) { return r.count + " expressão(ões) removida(s)"; }); };
-  $("#btnApplyExpr").onclick = function () { run("mf_applyExpression", { expr: val("exprCode"), target: val("exprTarget") }, "Expressão aplicada"); };
+  $("#btnApplyExpr").onclick = function () { applyExpr({ expr: val("exprCode"), target: val("exprTarget") }, "Expressão aplicada"); };
+  /* aplica e mostra o erro exato do After Effects, se houver (a expressão com erro é desfeita) */
+  function applyExpr(arg, okMsg) {
+    return H.call("mf_applyExpression", arg).then(function (r) {
+      if (r.errors && r.errors.length) toast(window.MT_T("Aplicada em") + " " + r.count + " · " + r.errors.length + " " + window.MT_T("com erro") + ": " + r.errors[0], true);
+      else toast(okMsg);
+    }).catch(function (e) { toast(window.MT_T("Erro na expressão") + ": " + e.message, true); });
+  }
   $("#btnSaveExpr").onclick = function () {
     if (!val("exprCode").trim()) return;
     var arr = store.get("myExpr", []); arr.push({ name: val("exprName") || "Expressão " + (arr.length + 1), expr: val("exprCode"), target: val("exprTarget") });

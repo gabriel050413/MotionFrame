@@ -149,20 +149,23 @@ def job_transcribe(o, progress):
     words = []
     for seg in segments:
         for w in (seg.words or []):
-            words.append({"start": w.start, "end": w.end, "text": w.word.strip()})
+            t = w.word.strip()
+            if t:
+                words.append({"start": round(w.start, 3), "end": round(w.end, 3), "text": t})
         progress(5 + 90 * min(1, seg.end / dur), f"Transcrevendo... {int(seg.end)}s / {int(dur)}s")
     max_words = int(o.get("maxWords", 3))
-    max_chars = int(o.get("maxChars", 22))
+    max_chars = int(o.get("maxChars", max(22, int(o.get("maxWords", 3)) * 8)))
     caps, cur = [], []
     for w in words:
         cand = " ".join(x["text"] for x in cur + [w])
         gap = cur and (w["start"] - cur[-1]["end"] > 0.6)
-        if cur and (len(cur) >= max_words or len(cand) > max_chars or gap):
-            caps.append({"start": cur[0]["start"], "end": cur[-1]["end"], "text": " ".join(x["text"] for x in cur)})
+        end_sentence = cur and cur[-1]["text"][-1:] in ".!?"
+        if cur and (len(cur) >= max_words or len(cand) > max_chars or gap or end_sentence):
+            caps.append({"start": cur[0]["start"], "end": cur[-1]["end"], "text": " ".join(x["text"] for x in cur), "words": cur})
             cur = []
         cur.append(w)
     if cur:
-        caps.append({"start": cur[0]["start"], "end": cur[-1]["end"], "text": " ".join(x["text"] for x in cur)})
+        caps.append({"start": cur[0]["start"], "end": cur[-1]["end"], "text": " ".join(x["text"] for x in cur), "words": cur})
     # estende cada legenda até a próxima (sem buracos piscando)
     for i in range(len(caps) - 1):
         if caps[i + 1]["start"] - caps[i]["end"] < 0.4:

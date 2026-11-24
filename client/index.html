@@ -155,18 +155,24 @@
 
 <!-- MOTION LIBRARY ------------------------------------------------->
 <section class="view" data-view="motion">
-  <div class="head"><span class="ico" data-i="sparkle"></span><div><h2>Motion Library</h2><p>Animações e transições com 1 clique.</p></div></div>
-  <div class="row adv"><label class="tg"><input type="checkbox" id="motProp" checked><span></span>Proporcional</label>
-    <label>% <input type="number" id="motPct" value="20" min="1" max="100"></label>
-    <label>ou seg <input type="number" id="motDur" value="0.5" step="0.05"></label></div>
-  <div class="tabs" id="motTabs"></div>
-  <div class="cards" id="motCards"></div>
-  <p class="muted small">Transições: selecione 2 clips (aplica no corte) ou nada (aplica no CTI).</p>
+  <div class="head"><span class="ico" data-i="sparkle"></span><div><h2>Biblioteca</h2><p>Clique num item para aplicar na layer selecionada (ou no CTI).</p></div></div>
+  <div class="cmd mini-cmd"><span class="ico" data-i="search"></span><input id="libSearch" placeholder="Buscar: fade, pop, wave, caixa, seta…"></div>
+  <div class="tabs scroll" id="libTabs"></div>
+  <div class="lgrid" id="libCards"></div>
+  <div class="glass pad adv">
+    <div class="row"><label class="tg"><input type="checkbox" id="motProp"><span></span>Proporcional ao clip</label>
+      <label>% <input type="number" id="motPct" value="25" min="1" max="100"></label>
+      <label>Duração (s) <input type="number" id="motDur" value="" step="0.05" placeholder="auto"></label></div>
+    <div class="row"><label>Texto de exemplo <input id="libSample" placeholder="TEXTO"></label><label>@ do perfil <input id="libHandle" placeholder="@seuperfil"></label></div>
+  </div>
+  <p class="muted small">Sem texto selecionado, os presets de texto criam uma layer de texto nova. Transições: selecione 2 clips (aplica no corte) ou nada (aplica no CTI).</p>
 </section>
 
 <!-- LEGENDAS + TRACKING -------------------------------------------->
 <section class="view" data-view="captions">
   <div class="head"><span class="ico" data-i="cc"></span><div><h2>Legendas + Face Track</h2><p>Selecione a layer do vídeo e clique em gerar.</p></div></div>
+  <h3>Modelo</h3>
+  <div class="tpls" id="capTpls"></div>
   <div class="glass pad">
     <div class="row"><label>Idioma <select id="capLang"><option value="">Auto</option><option value="pt">Português</option><option value="en">Inglês</option><option value="es">Espanhol</option><option value="fr">Francês</option><option value="de">Alemão</option><option value="ja">Japonês</option><option value="ar">Árabe</option></select></label>
       <label class="adv">Modelo <select id="capModel"><option>tiny</option><option>base</option><option selected>small</option><option>medium</option><option>large-v3</option></select></label>
@@ -319,6 +325,7 @@
 <script src="js/icons.js"></script>
 <script src="js/main.js"></script>
 <script src="js/magic.js"></script>
+<script src="js/library.js"></script>
 <script src="js/i18n.js"></script>
 </body>
 </html>

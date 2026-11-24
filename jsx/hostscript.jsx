@@ -536,23 +536,42 @@ function findProp(layer, matchName) {
     return found;
 }
 /* arg: {expr, target?: "position"|matchName} \u2014 aplica nas props selecionadas ou no alvo */
+/* aplica uma expressao e confere o erro que o proprio AE reporta; se der erro, desfaz */
+function applyExprSafe(p, expr) {
+    var old = "", err = "";
+    try { old = p.expression; } catch (e0) {}
+    try { p.expression = expr; } catch (e) { err = e.message || String(e); }
+    if (!err) { try { err = p.expressionError || ""; } catch (e2) { err = ""; } }
+    if (err) { try { p.expression = old; } catch (e3) {} }
+    return err;
+}
+/* arg: {expr, target?: "position"|matchName, useSelected?: bool}
+ * Ordem: 1) propriedade-alvo da expressao  2) propriedades selecionadas (se nao houver alvo) */
 function mf_applyExpression(arg) {
-    return undo("Express\u00e3o", function () {
-        var o = parseArg(arg), comp = activeComp(), L = selLayers(comp, true), i, j, n = 0;
+    return undo("Expressao", function () {
+        var o = parseArg(arg), comp = activeComp(), L = selLayers(comp, true), i, j, n = 0, errs = [];
         for (i = 0; i < L.length; i++) {
-            var sp = L[i].selectedProperties, done = false;
-            for (j = 0; j < sp.length; j++) {
-                if (sp[j].propertyType === PropertyType.PROPERTY && sp[j].canSetExpression) { sp[j].expression = o.expr; n++; done = true; }
-            }
-            if (!done && o.target) {
+            var targets = [];
+            if (o.target && !o.useSelected) {
                 var mn = MF_PROPMAP[o.target] || o.target;
-                if (mn === "ADBE Text Document" && !(L[i] instanceof TextLayer)) continue;
-                var p = findProp(L[i], mn);
-                if (p && p.canSetExpression) { p.expression = o.expr; n++; }
+                if (!(mn === "ADBE Text Document" && !(L[i] instanceof TextLayer))) {
+                    var p = findProp(L[i], mn);
+                    if (p && mn === "ADBE Position" && p.dimensionsSeparated) { errs.push(L[i].name + ": Position com dimensoes separadas"); continue; }
+                    if (p && p.canSetExpression) targets.push(p);
+                }
+            }
+            if (!targets.length) {
+                var sp = L[i].selectedProperties;
+                for (j = 0; j < sp.length; j++) if (sp[j].propertyType === PropertyType.PROPERTY && sp[j].canSetExpression) targets.push(sp[j]);
+            }
+            for (j = 0; j < targets.length; j++) {
+                var err = applyExprSafe(targets[j], o.expr);
+                if (err) errs.push(L[i].name + " > " + targets[j].name + ": " + err); else n++;
             }
         }
+        if (!n && errs.length) throw new Error(errs[0]);
         if (!n) throw new Error("Selecione uma propriedade (ou layer com a propriedade alvo).");
-        return ok({ count: n });
+        return ok({ count: n, errors: errs });
     });
 }
 function mf_clearExpressions() {
@@ -610,7 +629,7 @@ function restoreGroup(g, data, t0) {
                 var base = d.keys[0].t;
                 rebuildKeys(p, d.keys, function (t) { return t0 + (t - base); });
             } else if (d.v !== undefined) p.setValue(d.v);
-            if (d.expr) p.expression = d.expr;
+            if (d.expr) applyExprSafe(p, d.expr);
         } catch (e) {}
     }
 }
@@ -700,10 +719,10 @@ function mf_applyMotion(arg) {
                     var bl = addEffect(ly, "ADBE Gaussian Blur 2"); bl.name = N("blurIn");
                     keyPair(bl.property(1), a, 80, a + d, 0); keyPair(op, a, 0, a + d * 0.5, 100); break;
                 case "zoom_slow": keyPair(sc, a, S, b, [S[0] * 1.15, S[1] * 1.15, S[2] || 100], false); break;
-                case "shake": pos.expression = "freq=" + (o.freq || 12) + ";amp=" + (o.amp || 25) + ";wiggle(freq,amp)"; break;
-                case "shake_rot": rot.expression = "wiggle(10,4)"; break;
+                case "shake": applyExprSafe(pos, "wiggle(" + (o.freq || 12) + "," + (o.amp || 25) + ")"); break;
+                case "shake_rot": applyExprSafe(rot, "wiggle(10,4)"); break;
                 case "bounce":
-                    sc.expression = "n=0;if(numKeys>0){n=nearestKey(time).index;if(key(n).time>time)n--;}\nif(n==0)t=0;else t=time-key(n).time;\nif(n>0&&t<1){v=velocityAtTime(key(n).time-thisComp.frameDuration/10);amp=.06;freq=3;decay=5;value+v*amp*Math.sin(freq*t*2*Math.PI)/Math.exp(decay*t);}else value;";
+                    applyExprSafe(sc, "var n=0;if(numKeys>0){n=nearestKey(time).index;if(key(n).time>time)n--;}var t=(n==0)?0:time-key(n).time;if(n>0&&t<1){var v=velocityAtTime(key(n).time-thisComp.frameDuration/10);add(value,mul(v,0.06*Math.sin(3*t*2*Math.PI)/Math.exp(5*t)));}else{value;}");
                     break;
                 case "flash":
                     var ex = addEffect(ly, "ADBE Exposure2");
@@ -712,8 +731,8 @@ function mf_applyMotion(arg) {
                 case "glitch":
                     var ww = addEffect(ly, "ADBE Wave Warp");
                     if (ww) { ww.name = N("glitch"); setByName(ww, "Wave Type", 3); setByName(ww, "Wave Height", 0); setByName(ww, "Wave Width", 30);
-                        try { ww.property(2).expression = "seedRandom(Math.floor(time*12),true);r=random();r>.8?random(20,80):0"; } catch (gx) {} }
-                    pos.expression = "seedRandom(Math.floor(time*12),true);r=random();r>.85?value+[random(-25,25),0]:value";
+                        try { applyExprSafe(ww.property(2), "seedRandom(Math.floor(time*12),true);(random()>0.8)?random(20,80):0"); } catch (gx) {} }
+                    applyExprSafe(pos, "seedRandom(Math.floor(time*12),true);var v=value;if(random()>0.85){v[0]+=random(-25,25);}v");
                     break;
                 case "fx_glow": deepGlow(ly, 1); break;
                 default: throw new Error("Preset desconhecido: " + o.id);
@@ -873,41 +892,408 @@ function mf_getSelectedMedia() {
     } catch (e) { return fail(e); }
 }
 
-function deepGlow(layer, strength) {
-    strength = strength || 1;
-    // Usa o plugin Deep Glow (Plugin Everything) se estiver instalado; sen\u00e3o simula com 2 Glows + Gaussian.
-    var dg = addEffect(layer, "Deep Glow") || addEffect(layer, "PEDG");
-    if (dg) { setByName(dg, "Radius", 60 * strength); setByName(dg, "Exposure", 0.6 * strength); return; }
-    var g1 = addEffect(layer, "ADBE Glo2");
-    if (g1) { g1.name = N("glowIn"); setByName(g1, "Glow Threshold", 40); setByName(g1, "Glow Radius", 12 * strength); setByName(g1, "Glow Intensity", 1.2); }
-    var g2 = addEffect(layer, "ADBE Glo2");
-    if (g2) { g2.name = N("glowOut"); setByName(g2, "Glow Threshold", 30); setByName(g2, "Glow Radius", 70 * strength); setByName(g2, "Glow Intensity", 0.8); }
+
+/* ================================================================== */
+/* Setters robustos: matchName primeiro, nome em ingles depois         */
+/* (funciona em AE de qualquer idioma)                                 */
+/* ================================================================== */
+function setP(group, keys, v) {
+    var i, p;
+    if (!group) return false;
+    for (i = 0; i < keys.length; i++) {
+        try { p = group.property(keys[i]); if (p) { p.setValue(v); return true; } } catch (e) {}
+    }
+    return false;
 }
-function styleCaption(layer, st) {
-    var tp = layer.property("ADBE Text Properties").property("ADBE Text Document"), td = tp.value;
-    try { td.resetCharStyle(); } catch (e) {}
-    td.font = st.font || "Arial-BoldMT";
-    td.fontSize = st.size || 64;
-    td.applyFill = true; td.fillColor = st.color || [1, 1, 1];
-    if (st.stroke) { td.applyStroke = true; td.strokeColor = [0, 0, 0]; td.strokeWidth = st.stroke; td.strokeOverFill = false; }
-    td.justification = ParagraphJustification.CENTER_JUSTIFY;
-    if (st.upper) td.text = String(td.text).toUpperCase();
-    tp.setValue(td);
-    if (st.glow !== false) deepGlow(layer, st.glowStrength || 1);
-    if (st.shadow !== false) {
-        var ds = addEffect(layer, "ADBE Drop Shadow");
-        if (ds) { setByName(ds, "Opacity", 0.85 * 255); setByName(ds, "Distance", 6); setByName(ds, "Softness", 18); setByName(ds, "Direction", 150); }
+function col4(c) { return [c[0], c[1], c[2], c.length > 3 ? c[3] : 1]; }
+function setColor(group, keys, c) { return setP(group, keys, col4(c)) || setP(group, keys, [c[0], c[1], c[2]]); }
+function exprStr(s) { return String(s).replace(/\\/g, "\\\\").replace(/"/g, '\\"'); }
+
+/* ================================================================== */
+/* BIBLIOTECA \u2014 presets de texto (estilo Animation Composer)           */
+/* spec: {name, based:"chars|words|lines", props:{opacity,pos,scale,rot,blur,track,skew,fill},
+ *        dir:"in|out|loop", order:"fwd|rev|rand", shape:"square|rampUp|...", smooth:0-100,
+ *        loop:"wave|wiggle|flicker|pulse|color|breathe", dur}                                   */
+/* ================================================================== */
+var MT_BASED = { chars: 1, charsNoSpace: 2, words: 3, lines: 4 };
+var MT_SHAPE = { square: 1, rampUp: 2, rampDown: 3, triangle: 4, round: 5, smooth: 6 };
+
+function textAnimators(layer) { return layer.property("ADBE Text Properties").property("ADBE Text Animators"); }
+function addAnimProps(getAP, P) {
+    if (!P) return;
+    var p;
+    if (P.opacity !== undefined) { p = getAP().addProperty("ADBE Text Opacity"); p.setValue(P.opacity); }
+    if (P.pos) { p = getAP().addProperty("ADBE Text Position 3D"); p.setValue([P.pos[0], P.pos[1], 0]); }
+    if (P.scale) { p = getAP().addProperty("ADBE Text Scale 3D"); p.setValue([P.scale[0], P.scale[1], 100]); }
+    if (P.rot !== undefined) { p = getAP().addProperty("ADBE Text Rotation"); p.setValue(P.rot); }
+    if (P.blur !== undefined) { p = getAP().addProperty("ADBE Text Blur"); p.setValue([P.blur, P.blur]); }
+    if (P.track !== undefined) { p = getAP().addProperty("ADBE Text Tracking Amount"); p.setValue(P.track); }
+    if (P.skew !== undefined) { p = getAP().addProperty("ADBE Text Skew"); p.setValue(P.skew); }
+    if (P.fill) { p = getAP().addProperty("ADBE Text Fill Color"); try { p.setValue(col4(P.fill)); } catch (e) { p.setValue([P.fill[0], P.fill[1], P.fill[2]]); } }
+}
+function keyLinear2(p, t0, v0, t1, v1, infl) {
+    p.setValueAtTime(t0, v0); p.setValueAtTime(t1, v1);
+    var k, e = [new KeyframeEase(0, infl || 70)];
+    for (k = 1; k <= p.numKeys; k++) { try { p.setTemporalEaseAtKey(k, e, e); } catch (x) {} }
+}
+function buildTextPreset(comp, layer, spec, dur) {
+    var A0 = textAnimators(layer).addProperty("ADBE Text Animator");
+    var ai = A0.propertyIndex;
+    A0.name = "MT " + spec.name;
+    function A() { return textAnimators(layer).property(ai); }
+    function AP() { return A().property("ADBE Text Animator Properties"); }
+    addAnimProps(AP, spec.props);
+    var based = MT_BASED[spec.based || "chars"] || 1;
+
+    if (spec.dir === "loop") {
+        if (spec.loop === "wiggle") {
+            A().property("ADBE Text Selectors").addProperty("ADBE Text Wiggly Selector");
+            var w = A().property("ADBE Text Selectors").property(1);
+            setP(w, ["ADBE Text Range Type2"], based);
+            setP(w, ["ADBE Text Wiggly Wiggles", "Wiggles/Second"], spec.freq || 3);
+            return;
+        }
+        A().property("ADBE Text Selectors").addProperty("ADBE Text Expressible Selector");
+        var xs = A().property("ADBE Text Selectors").property(1);
+        setP(xs, ["ADBE Text Range Type2"], based);
+        var code = {
+            wave: "var a=(Math.sin((time*2-textIndex*0.18)*Math.PI*2)+1)*50;[a,a,a]",
+            pulse: "var a=(Math.sin(time*4-textIndex*0.6)+1)*50;[a,a,a]",
+            flicker: "seedRandom(textIndex*13+Math.floor(time*12),true);var a=random()>0.82?100:0;[a,a,a]",
+            color: "var a=(Math.sin((time*1.5-textIndex*0.12)*Math.PI*2)+1)*50;[a,a,a]",
+            breathe: "var a=(Math.sin(time*2)+1)*50;[a,a,a]",
+            bounce: "var t=(time*1.6-textIndex*0.12)%1;var a=t<0.5?Math.sin(t*Math.PI*2)*100:0;a=Math.max(0,a);[a,a,a]"
+        }[spec.loop] || "[100,100,100]";
+        var amt = xs.property("ADBE Text Expressible Amount");
+        var err = amt ? applyExprSafe(amt, code) : "";
+        if (err) throw new Error(err);
+        return;
+    }
+
+    A().property("ADBE Text Selectors").addProperty("ADBE Text Selector");
+    function SEL() { return A().property("ADBE Text Selectors").property(1); }
+    var adv = SEL().property("ADBE Text Range Advanced");
+    setP(adv, ["ADBE Text Range Type2"], based);
+    if (spec.shape) setP(SEL().property("ADBE Text Range Advanced"), ["ADBE Text Range Shape"], MT_SHAPE[spec.shape] || 1);
+    if (spec.smooth !== undefined) setP(SEL().property("ADBE Text Range Advanced"), ["ADBE Text Selector Smoothness"], spec.smooth);
+    if (spec.order === "rand") setP(SEL().property("ADBE Text Range Advanced"), ["ADBE Text Randomize Order"], 1);
+    var fd = comp.frameDuration, t0, t1;
+    if (spec.dir === "out") { t1 = layer.outPoint - fd; t0 = Math.max(layer.inPoint, t1 - dur); }
+    else { t0 = layer.inPoint; t1 = Math.min(layer.outPoint - fd, t0 + dur); }
+    var start = SEL().property("ADBE Text Percent Start"), end = SEL().property("ADBE Text Percent End");
+    var rev = spec.order === "rev", infl = spec.infl || 70;
+    if (spec.dir === "out") {
+        if (rev) keyLinear2(start, t0, 100, t1, 0, infl); else keyLinear2(end, t0, 0, t1, 100, infl);
+    } else {
+        if (rev) keyLinear2(SEL().property("ADBE Text Percent End"), t0, 100, t1, 0, infl);
+        else keyLinear2(SEL().property("ADBE Text Percent Start"), t0, 0, t1, 100, infl);
     }
 }
-/*  arg: {
- *    segments:[{start,end,text}] (tempo da m\u00eddia em s),
- *    media:{index,startTime,stretch, width,height},
- *    style:{font,size,color,stroke,upper,glow,shadow,anim},
- *    track:{fps, points:[{t,x,y,s}]  (x,y normalizados 0-1 no frame da m\u00eddia, s = tamanho do rosto)},
- *    offset:[dx,dy]  (deslocamento da legenda em rela\u00e7\u00e3o \u00e0 cabe\u00e7a, px)
- *  } */
+function targetTextLayers(comp, sampleText) {
+    var L = selLayers(comp, false), out = [], i;
+    for (i = 0; i < L.length; i++) if (L[i] instanceof TextLayer) out.push(L[i]);
+    if (!out.length) {
+        var t = comp.layers.addText(sampleText || N("text"));
+        var tp = t.property("ADBE Text Properties").property("ADBE Text Document"), td = tp.value;
+        try { td.font = "Arial-BoldMT"; } catch (e) {}
+        td.fontSize = Math.round(Math.min(comp.width, comp.height) / 8); td.applyFill = true; td.fillColor = [1, 1, 1];
+        td.justification = ParagraphJustification.CENTER_JUSTIFY;
+        try { tp.setValue(td); } catch (e2) {}
+        t.startTime = 0; t.inPoint = comp.time; t.outPoint = Math.min(comp.duration, comp.time + 4);
+        centerLayer(comp, t);
+        out.push(t);
+    }
+    return out;
+}
+/* arg: {spec, proportional, percent, dur, sample} */
+function mf_applyTextPreset(arg) {
+    return undo("Preset de texto", function () {
+        var o = parseArg(arg), comp = activeComp(), L = targetTextLayers(comp, o.sample), i;
+        for (i = 0; i < L.length; i++) {
+            var d = o.dur || o.spec.dur || 1;
+            if (o.proportional) d = Math.max(comp.frameDuration * 4, (L[i].outPoint - L[i].inPoint) * (o.percent || 25) / 100);
+            buildTextPreset(comp, L[i], o.spec, d);
+        }
+        return ok({ count: L.length });
+    });
+}
+
+/* ================================================================== */
+/* BIBLIOTECA \u2014 caixas de texto, elementos e social                    */
+/* ================================================================== */
+function shapeContents(sh) { return sh.property("ADBE Root Vectors Group"); }
+function newGroup(sh, name) {
+    var g = shapeContents(sh).addProperty("ADBE Vector Group"); g.name = name || "MT";
+    var gi = g.propertyIndex;
+    return function () { return shapeContents(sh).property(gi); };
+}
+function gAdd(G, mn) { var p = G().property("ADBE Vectors Group").addProperty(mn); var pi = p.propertyIndex; return function () { return G().property("ADBE Vectors Group").property(pi); }; }
+function gFill(G, c, op) { var f = gAdd(G, "ADBE Vector Graphic - Fill"); setColor(f(), ["ADBE Vector Fill Color"], c); if (op !== undefined) setP(f(), ["ADBE Vector Fill Opacity"], op); return f; }
+function gStroke(G, c, w) {
+    var s = gAdd(G, "ADBE Vector Graphic - Stroke");
+    setColor(s(), ["ADBE Vector Stroke Color"], c); setP(s(), ["ADBE Vector Stroke Width"], w); setP(s(), ["ADBE Vector Stroke Line Cap"], 2);
+    return s;
+}
+function gPath(G, verts, closed) {
+    var p = gAdd(G, "ADBE Vector Shape - Group"), sh = new Shape();
+    sh.vertices = verts; sh.closed = !!closed;
+    p().property("ADBE Vector Shape").setValue(sh);
+    return p;
+}
+function gXform(G) { return G().property("ADBE Vector Transform Group"); }
+function popScale(prop, t, d, from) {
+    from = from || 0;
+    prop.setValueAtTime(t, [from, from]); prop.setValueAtTime(t + d * 0.7, [110, 110]); prop.setValueAtTime(t + d, [100, 100]); easeAll(prop);
+}
+function shapeLayerAt(comp, name, t, dur, pos) {
+    var sh = comp.layers.addShape(); sh.name = name;
+    sh.startTime = 0; sh.inPoint = t; sh.outPoint = Math.min(comp.duration, t + dur);
+    sh.property("ADBE Transform Group").property("ADBE Position").setValue(pos || [comp.width / 2, comp.height / 2]);
+    return sh;
+}
+function anchorOfSelection(comp) {
+    var L = selLayers(comp, false);
+    if (L.length && !(L[0] instanceof CameraLayer)) {
+        try { var r = L[0].sourceRectAtTime(comp.time, false), p = L[0].property("ADBE Transform Group").property("ADBE Position").value; return [p[0], p[1]]; } catch (e) {}
+    }
+    return [comp.width / 2, comp.height / 2];
+}
+
+/* caixa que acompanha o texto (tamanho/posicao por expressao) */
+function addTextBox(comp, txt, style) {
+    var nm = exprStr(txt.name), padX = style.padX || 28, padY = style.padY || 14;
+    var sh = comp.layers.addShape();
+    sh.name = "MT Box | " + txt.name; sh.moveAfter(txt);
+    sh.startTime = 0; sh.inPoint = txt.inPoint; sh.outPoint = txt.outPoint;
+    var G = newGroup(sh, "Box"), R = gAdd(G, "ADBE Vector Shape - Rect");
+    var rectRef = 'var L=thisComp.layer("' + nm + '");var r=L.sourceRectAtTime(time,false);var s=L.transform.scale;var w=r.width*s[0]/100,h=r.height*s[1]/100;';
+    if (style.kind === "underline") {
+        applyExprSafe(R().property("ADBE Vector Rect Size"), rectRef + '[w+' + padX + ',' + (style.thick || 8) + ']');
+        applyExprSafe(sh.property("ADBE Transform Group").property("ADBE Position"), rectRef + 'var p=L.toComp([r.left+r.width/2,r.top+r.height]);[p[0],p[1]+' + (style.gap || 12) + ']');
+    } else if (style.kind === "marker") {
+        applyExprSafe(R().property("ADBE Vector Rect Size"), rectRef + '[w+' + padX + ',h*0.55]');
+        applyExprSafe(sh.property("ADBE Transform Group").property("ADBE Position"), rectRef + 'var p=L.toComp([r.left+r.width/2,r.top+r.height*0.68]);[p[0],p[1]]');
+    } else {
+        applyExprSafe(R().property("ADBE Vector Rect Size"), rectRef + '[w+' + (padX * 2) + ',h+' + (padY * 2) + ']');
+        applyExprSafe(sh.property("ADBE Transform Group").property("ADBE Position"), rectRef + 'var p=L.toComp([r.left+r.width/2,r.top+r.height/2]);[p[0],p[1]]');
+    }
+    setP(R(), ["ADBE Vector Rect Roundness"], style.round !== undefined ? style.round : 16);
+    if (style.stroke) gStroke(G, style.color, style.stroke); else gFill(G, style.color, style.opacity);
+    /* entrada: cresce da esquerda (marker/underline) ou do centro */
+    var X = gXform(G), sc = X.property("ADBE Vector Scale"), t = txt.inPoint, d = 0.35;
+    if (style.kind === "marker" || style.kind === "underline") {
+        var half = rectRef + '[-(w+' + padX + ')/2,0]';
+        applyExprSafe(gXform(G).property("ADBE Vector Anchor"), half);
+        applyExprSafe(gXform(G).property("ADBE Vector Position"), half);
+        gXform(G).property("ADBE Vector Scale").setValueAtTime(t, [0, 100]);
+        gXform(G).property("ADBE Vector Scale").setValueAtTime(t + d, [100, 100]); easeAll(gXform(G).property("ADBE Vector Scale"));
+    } else {
+        sc.setValueAtTime(t, [0, 100]); sc.setValueAtTime(t + d, [100, 100]); easeAll(sc);
+    }
+    if (style.textColor) {
+        var tp = txt.property("ADBE Text Properties").property("ADBE Text Document"), td = tp.value;
+        td.applyFill = true; td.fillColor = style.textColor; try { tp.setValue(td); } catch (e) {}
+    }
+    return sh;
+}
+var MT_BOXES = {
+    box_pill: { kind: "box", color: [1, 1, 1], round: 60, textColor: [0.05, 0.05, 0.07] },
+    box_solid: { kind: "box", color: [0.45, 0.3, 1], round: 10 },
+    box_black: { kind: "box", color: [0, 0, 0], round: 8, opacity: 80 },
+    box_outline: { kind: "box", color: [1, 1, 1], round: 14, stroke: 5 },
+    box_underline: { kind: "underline", color: [1, 0.8, 0.1], round: 4, thick: 8 },
+    box_marker: { kind: "marker", color: [1, 0.85, 0.1], round: 6, opacity: 75 }
+};
+
+function addElement(comp, id, o) {
+    var t = comp.time, pos = anchorOfSelection(comp), sh, G, X, P;
+    switch (id) {
+        case "el_burst":
+            sh = shapeLayerAt(comp, "MT Burst", t, 1.2, pos); G = newGroup(sh, "Burst");
+            gPath(G, [[0, -70], [0, -130]], false);
+            var tr = gAdd(G, "ADBE Vector Filter - Trim");
+            gStroke(G, o.color || [1, 1, 1], 9);
+            var rp = gAdd(G, "ADBE Vector Filter - Repeater");
+            setP(rp(), ["ADBE Vector Repeater Copies"], 8);
+            setP(rp().property("ADBE Vector Repeater Transform"), ["ADBE Vector Repeater Position"], [0, 0]);
+            setP(rp().property("ADBE Vector Repeater Transform"), ["ADBE Vector Repeater Rotation"], 45);
+            keyLinear2(tr().property("ADBE Vector Trim End"), t, 0, t + 0.3, 100, 70);
+            keyLinear2(tr().property("ADBE Vector Trim Start"), t + 0.15, 0, t + 0.5, 100, 70);
+            break;
+        case "el_ring":
+            sh = shapeLayerAt(comp, "MT Ring", t, 1, pos); G = newGroup(sh, "Ring");
+            setP(gAdd(G, "ADBE Vector Shape - Ellipse")(), ["ADBE Vector Ellipse Size"], [80, 80]);
+            var st = gStroke(G, o.color || [1, 1, 1], 16);
+            keyLinear2(gXform(G).property("ADBE Vector Scale"), t, [0, 0], t + 0.5, [320, 320], 80);
+            keyLinear2(st().property("ADBE Vector Stroke Width"), t, 16, t + 0.5, 0, 60);
+            break;
+        case "el_swoosh":
+            sh = shapeLayerAt(comp, "MT Swoosh", t, 2, [pos[0], pos[1] + 70]); G = newGroup(sh, "Swoosh");
+            var ps = gAdd(G, "ADBE Vector Shape - Group"), s1 = new Shape();
+            s1.vertices = [[-180, 10], [180, -6]]; s1.inTangents = [[0, 0], [-120, 30]]; s1.outTangents = [[120, 20], [0, 0]]; s1.closed = false;
+            ps().property("ADBE Vector Shape").setValue(s1);
+            var tr2 = gAdd(G, "ADBE Vector Filter - Trim");
+            gStroke(G, o.color || [1, 0.8, 0.1], 10);
+            keyLinear2(tr2().property("ADBE Vector Trim End"), t, 0, t + 0.45, 100, 75);
+            break;
+        case "el_arrow":
+            sh = shapeLayerAt(comp, "MT Arrow", t, 2, pos); G = newGroup(sh, "Arrow");
+            gPath(G, [[-110, 0], [100, 0]], false);
+            gPath(G, [[60, -40], [102, 0], [60, 40]], false);
+            var tr3 = gAdd(G, "ADBE Vector Filter - Trim");
+            gStroke(G, o.color || [1, 1, 1], 12);
+            keyLinear2(tr3().property("ADBE Vector Trim End"), t, 0, t + 0.5, 100, 75);
+            break;
+        case "el_sparkle":
+            sh = shapeLayerAt(comp, "MT Sparkle", t, 1.5, pos); G = newGroup(sh, "Sparkle");
+            var star = gAdd(G, "ADBE Vector Shape - Star");
+            setP(star(), ["ADBE Vector Star Type"], 1); setP(star(), ["ADBE Vector Star Points"], 4);
+            setP(star(), ["ADBE Vector Star Inner Radius"], 14); setP(star(), ["ADBE Vector Star Outer Radius"], 60);
+            setP(star(), ["ADBE Vector Star Inner Roundess", "ADBE Vector Star Inner Roundness"], 60);
+            gFill(G, o.color || [1, 1, 1]);
+            popScale(gXform(G).property("ADBE Vector Scale"), t, 0.35);
+            keyLinear2(gXform(G).property("ADBE Vector Rotation"), t, -45, t + 0.6, 0, 70);
+            break;
+        case "so_subscribe":
+        case "so_follow":
+            var sub = id === "so_subscribe";
+            sh = shapeLayerAt(comp, sub ? "MT Subscribe" : "MT Follow", t, 3.5, [comp.width / 2, comp.height * 0.78]); G = newGroup(sh, "Button");
+            var R = gAdd(G, "ADBE Vector Shape - Rect");
+            setP(R(), ["ADBE Vector Rect Size"], sub ? [420, 100] : [460, 96]); setP(R(), ["ADBE Vector Rect Roundness"], sub ? 14 : 48);
+            var F = gFill(G, sub ? [0.9, 0.08, 0.1] : [1, 1, 1]);
+            var label = sub ? (o.label || "INSCREVA-SE") : (o.handle || "@seuperfil");
+            var tx = comp.layers.addText(label), tp = tx.property("ADBE Text Properties").property("ADBE Text Document"), td = tp.value;
+            try { td.font = "Arial-BoldMT"; } catch (e1) {}
+            td.fontSize = sub ? 44 : 42; td.applyFill = true; td.fillColor = sub ? [1, 1, 1] : [0.06, 0.06, 0.08];
+            td.justification = ParagraphJustification.CENTER_JUSTIFY; tp.setValue(td);
+            tx.name = sub ? "MT Subscribe Text" : "MT Follow Text";
+            tx.startTime = 0; tx.inPoint = sh.inPoint; tx.outPoint = sh.outPoint;
+            centerLayer(comp, tx);
+            tx.property("ADBE Transform Group").property("ADBE Position").setValue(sh.property("ADBE Transform Group").property("ADBE Position").value);
+            tx.parent = sh;
+            popScale(sh.property("ADBE Transform Group").property("ADBE Scale"), t, 0.4);
+            if (sub) {
+                var c2 = t + 1.6;
+                setColor(F(), ["ADBE Vector Fill Color"], [0.9, 0.08, 0.1]);
+                F().property("ADBE Vector Fill Color").setValueAtTime(c2 - 0.01, col4([0.9, 0.08, 0.1]));
+                F().property("ADBE Vector Fill Color").setValueAtTime(c2, col4([0.35, 0.35, 0.38]));
+                var sTxt = tx.property("ADBE Text Properties").property("ADBE Text Document");
+                var d1 = sTxt.value; sTxt.setValueAtTime(t, d1);
+                var d2 = sTxt.value; d2.text = o.label2 || "INSCRITO"; sTxt.setValueAtTime(c2, d2);
+                var scl = sh.property("ADBE Transform Group").property("ADBE Scale");
+                scl.setValueAtTime(c2 - 0.12, [100, 100]); scl.setValueAtTime(c2, [90, 90]); scl.setValueAtTime(c2 + 0.15, [100, 100]);
+            }
+            var so = sh.property("ADBE Transform Group").property("ADBE Opacity");
+            so.setValueAtTime(sh.outPoint - 0.3, 100); so.setValueAtTime(sh.outPoint - comp.frameDuration, 0);
+            break;
+        default: throw new Error("Elemento desconhecido: " + id);
+    }
+    return sh;
+}
+/* arg: {id, color?, handle?, label?} */
+function mf_addElement(arg) {
+    return undo("Elemento", function () {
+        var o = parseArg(arg), comp = activeComp();
+        if (MT_BOXES[o.id]) {
+            var L = targetTextLayers(comp, o.sample), i;
+            for (i = 0; i < L.length; i++) addTextBox(comp, L[i], MT_BOXES[o.id]);
+            return ok({ count: L.length });
+        }
+        addElement(comp, o.id, o);
+        return ok({ count: 1 });
+    });
+}
+
+/* ================================================================== */
+/* LEGENDAS \u2014 estilo por modelo                                         */
+/* ================================================================== */
+function deepGlow(layer, strength, color) {
+    strength = strength || 1;
+    var dg = addEffect(layer, "Deep Glow") || addEffect(layer, "PEDG");
+    if (dg) { setP(dg, ["Radius"], 60 * strength); setP(dg, ["Exposure"], 0.6 * strength); return; }
+    var specs = [[N("glowIn"), 40, 12, 1.2], [N("glowOut"), 30, 70, 0.8]], i;
+    for (i = 0; i < specs.length; i++) {
+        var g = addEffect(layer, "ADBE Glo2"); if (!g) continue;
+        g.name = specs[i][0];
+        setP(g, ["ADBE Glo2-0002", "Glow Threshold"], specs[i][1]);
+        setP(g, ["ADBE Glo2-0003", "Glow Radius"], specs[i][2] * strength);
+        setP(g, ["ADBE Glo2-0004", "Glow Intensity"], specs[i][3]);
+        if (color) {
+            setP(g, ["ADBE Glo2-0007", "Glow Colors"], 2);
+            setColor(g, ["ADBE Glo2-0012", "Color A"], color); setColor(g, ["ADBE Glo2-0013", "Color B"], color);
+        }
+    }
+}
+function dropShadow(layer, st) {
+    var ds = addEffect(layer, "ADBE Drop Shadow"); if (!ds) return;
+    setColor(ds, ["ADBE Drop Shadow-0001", "Shadow Color"], st.shadowColor || [0, 0, 0]);
+    setP(ds, ["ADBE Drop Shadow-0002", "Opacity"], (st.shadowOpacity || 0.85) * 255);
+    setP(ds, ["ADBE Drop Shadow-0003", "Direction"], 150);
+    setP(ds, ["ADBE Drop Shadow-0004", "Distance"], st.shadowDist !== undefined ? st.shadowDist : 6);
+    setP(ds, ["ADBE Drop Shadow-0005", "Softness"], st.shadowSoft !== undefined ? st.shadowSoft : 18);
+}
+function gradientFill(layer, c1, c2) {
+    var rg = addEffect(layer, "ADBE Ramp"); if (!rg) return;
+    var r = layerRect(layer, layer.inPoint);
+    setP(rg, ["ADBE Ramp-0001", "Start of Ramp"], [r.left + r.width / 2, r.top]);
+    setColor(rg, ["ADBE Ramp-0002", "Start Color"], c1);
+    setP(rg, ["ADBE Ramp-0003", "End of Ramp"], [r.left + r.width / 2, r.top + r.height]);
+    setColor(rg, ["ADBE Ramp-0004", "End Color"], c2);
+}
+function wordTimesExpr(times) {
+    var a = [], i; for (i = 0; i < times.length; i++) a.push(Math.round(times[i] * 1000) / 1000);
+    return "[" + a.join(",") + "]";
+}
+/* destaque por palavra usando os tempos do Whisper */
+function wordAnimator(layer, name, props, code) {
+    var A0 = textAnimators(layer).addProperty("ADBE Text Animator"), ai = A0.propertyIndex;
+    A0.name = name;
+    function A() { return textAnimators(layer).property(ai); }
+    addAnimProps(function () { return A().property("ADBE Text Animator Properties"); }, props);
+    A().property("ADBE Text Selectors").addProperty("ADBE Text Expressible Selector");
+    var xs = A().property("ADBE Text Selectors").property(1);
+    setP(xs, ["ADBE Text Range Type2"], 3);
+    var err = applyExprSafe(A().property("ADBE Text Selectors").property(1).property("ADBE Text Expressible Amount"), code);
+    if (err) throw new Error(err);
+}
+function styleCaption(comp, layer, st, starts, ends) {
+    var tp = layer.property("ADBE Text Properties").property("ADBE Text Document"), td = tp.value;
+    try { td.resetCharStyle(); } catch (e) {}
+    try { td.font = st.font || "Arial-BoldMT"; } catch (e1) { try { td.font = "Arial-BoldMT"; } catch (e2) {} }
+    td.fontSize = st.size || 64;
+    td.applyFill = true; td.fillColor = st.color || [1, 1, 1];
+    if (st.stroke) { td.applyStroke = true; td.strokeColor = st.strokeColor || [0, 0, 0]; td.strokeWidth = st.stroke; td.strokeOverFill = false; }
+    else { td.applyStroke = false; }
+    if (st.tracking !== undefined) { try { td.tracking = st.tracking; } catch (e3) {} }
+    td.justification = ParagraphJustification.CENTER_JUSTIFY;
+    if (st.upper) td.text = String(td.text).toUpperCase();
+    if (st.lower) td.text = String(td.text).toLowerCase();
+    tp.setValue(td);
+    if (tp.value.font !== (st.font || "Arial-BoldMT")) { /* fonte indisponivel: AE substitui sozinho */ }
+
+    if (st.gradient) gradientFill(layer, st.gradient[0], st.gradient[1]);
+    if (st.bevel) { var bv = addEffect(layer, "ADBE Bevel Alpha"); if (bv) setP(bv, ["ADBE Bevel Alpha-0001", "Edge Thickness"], 1.6); }
+    if (st.glow !== false) deepGlow(layer, st.glowStrength || 1, st.glowColor);
+    if (st.rays) { var rays = addEffect(layer, "CC Light Rays"); if (rays) { setP(rays, ["CC Light Rays-0001", "Intensity"], 35); setP(rays, ["CC Light Rays-0003", "Radius"], 25); } }
+    if (st.shadow !== false) dropShadow(layer, st);
+
+    if (starts && starts.length && st.words && st.words !== "none") {
+        var T = wordTimesExpr(starts), E = wordTimesExpr(ends || starts);
+        if (st.words === "highlight") {
+            var hc = st.highlight || [1, 0.85, 0.1], hs = st.highlightScale || 112;
+            wordAnimator(layer, "MT Highlight", { fill: hc, scale: [hs, hs] },
+                "var t=" + T + ";var e=" + E + ";var i=textIndex-1;var on=false;" +
+                "if(i<t.length){var nx=(i+1<t.length)?t[i+1]:e[i]+0.3;on=(time>=t[i]&&time<nx);}" +
+                "var a=on?100:0;[a,a,a]");
+        }
+        if (st.words === "reveal" || st.words === "highlight-reveal") {
+            wordAnimator(layer, "MT Reveal", { opacity: 0, scale: [60, 60] },
+                "var t=" + T + ";var i=textIndex-1;var k=(i<t.length)?t[i]:0;var a=linear(time,k,k+0.08,100,0);[a,a,a]");
+        }
+    }
+}
 function mf_createCaptions(arg) {
-    return undo("Legendas autom\u00e1ticas", function () {
+    return undo("Legendas", function () {
         var o = parseArg(arg), comp = activeComp(), st = o.style || {}, i;
         var media = comp.layer(o.media.index), stretch = (o.media.stretch || 100) / 100, st0 = o.media.startTime || 0;
         function mediaToComp(t) { return st0 + t * stretch; }
@@ -930,34 +1316,45 @@ function mf_createCaptions(arg) {
             }
             ctl.property(1).setValuesAtTimes(times, vals);
             sz.property(1).setValuesAtTimes(times, svals);
-            follow.property("ADBE Transform Group").property("ADBE Position").expression =
-                'L=thisComp.layer("' + media.name.replace(/"/g, '\\"') + '");\n' +
-                'n=Math.max(1,Math.round(effect("' + N("smooth") + '")(1)));f=thisComp.frameDuration;acc=[0,0];\n' +
-                'for(i=-n;i<=n;i++){acc+=effect("' + N("face") + '")(1).valueAtTime(time+i*f);}\n' +
-                'p=L.toComp(acc/(2*n+1));\n' +
-                'p+[effect("' + N("offX") + '")(1), effect("' + N("offY") + '")(1)]';
+            applyExprSafe(follow.property("ADBE Transform Group").property("ADBE Position"),
+                'var L=thisComp.layer("' + exprStr(media.name) + '");\n' +
+                'var n=Math.max(1,Math.round(effect("' + exprStr(N("smooth")) + '")(1)));var f=thisComp.frameDuration;var ax=0,ay=0;\n' +
+                'for(var k=-n;k<=n;k++){var v=effect("' + exprStr(N("face")) + '")(1).valueAtTime(time+k*f);ax+=v[0];ay+=v[1];}\n' +
+                'var p=L.toComp([ax/(2*n+1),ay/(2*n+1)]);\n' +
+                '[p[0]+effect("' + exprStr(N("offX")) + '")(1),p[1]+effect("' + exprStr(N("offY")) + '")(1)]');
         }
-        var made = 0;
+        var made = 0, errs = [];
         for (i = 0; i < o.segments.length; i++) {
-            var sg = o.segments[i], txt = String(sg.text).replace(/^\s+|\s+$/g, "");
+            var sg = o.segments[i], words = sg.words || [], txt, starts = [], ends = [], w;
+            if (words.length) {
+                var parts = [];
+                for (w = 0; w < words.length; w++) {
+                    var wt = String(words[w].text).replace(/^\s+|\s+$/g, "");
+                    if (!wt) continue;
+                    parts.push(wt); starts.push(mediaToComp(words[w].start)); ends.push(mediaToComp(words[w].end));
+                }
+                txt = parts.join(" ");
+            } else txt = String(sg.text).replace(/^\s+|\s+$/g, "");
             if (!txt) continue;
             var t = comp.layers.addText(txt);
             t.name = N("caption") + " " + (i + 1) + " - " + txt.substr(0, 20);
             t.label = 3;
             t.inPoint = mediaToComp(sg.start); t.outPoint = Math.max(mediaToComp(sg.end), t.inPoint + comp.frameDuration * 2);
-            styleCaption(t, st);
+            try { styleCaption(comp, t, st, starts, ends); } catch (se) { errs.push(se.message); }
             var pos = t.property("ADBE Transform Group").property("ADBE Position");
-            if (follow) { t.parent = null; pos.expression = 'thisComp.layer("' + follow.name + '").toComp([0,0,0])'; }
+            if (follow) applyExprSafe(pos, 'var p=thisComp.layer("' + exprStr(follow.name) + '").transform.position;[p[0],p[1]]');
             else pos.setValue([comp.width / 2, comp.height * (st.y || 0.8)]);
+            if (st.box) { try { addTextBox(comp, t, st.box); } catch (be) { errs.push(be.message); } }
             if (st.anim && st.anim !== "none") {
                 var sc = t.property("ADBE Transform Group").property("ADBE Scale"), op = t.property("ADBE Transform Group").property("ADBE Opacity");
                 var a = t.inPoint, d = Math.min(0.15, (t.outPoint - t.inPoint) / 3);
                 if (st.anim === "pop") { sc.setValueAtTime(a, [70, 70]); sc.setValueAtTime(a + d * 0.7, [108, 108]); sc.setValueAtTime(a + d, [100, 100]); easeAll(sc); }
                 if (st.anim === "fade") { op.setValueAtTime(a, 0); op.setValueAtTime(a + d, 100); }
+                if (st.anim === "slide") { var pv = pos.expression ? null : pos.value; if (pv) { pos.setValueAtTime(a, [pv[0], pv[1] + 30]); pos.setValueAtTime(a + d, pv); easeAll(pos); } op.setValueAtTime(a, 0); op.setValueAtTime(a + d, 100); }
             }
             made++;
         }
-        return ok({ count: made });
+        return ok({ count: made, errors: errs });
     });
 }
 

@@ -1,47 +1,128 @@
 /* MagicTouch — bibliotecas embutidas (expressões, presets, curvas, efeitos) */
 window.MF_DATA = {
 
-  /* Expressões mais usadas — target = propriedade em que é aplicada se nenhuma prop estiver selecionada */
+  /* Expressões — todas usam add()/mul() (funcionam nos motores JavaScript e Legacy, em layers 2D e 3D)
+     e se protegem quando a layer/câmera de referência não existe.  target = propriedade onde é aplicada. */
   expressions: [
     { cat: "Movimento", name: "Wiggle (tremer)", target: "position", expr: "wiggle(5, 30)" },
-    { cat: "Movimento", name: "Wiggle só no X", target: "position", expr: "w = wiggle(5, 30);\n[w[0], value[1]]" },
-    { cat: "Movimento", name: "Flutuar (hover)", target: "position", expr: "amp = 15; freq = 1;\nvalue + [0, Math.sin(time * freq * Math.PI * 2) * amp]" },
-    { cat: "Movimento", name: "Pêndulo / balanço", target: "rotation", expr: "amp = 15; freq = 1; decay = 0.6;\namp * Math.sin(freq * time * 2 * Math.PI) / Math.exp(decay * time)" },
-    { cat: "Movimento", name: "Rotação contínua", target: "rotation", expr: "time * 90" },
-    { cat: "Movimento", name: "Shake de câmera (impacto)", target: "position", expr: "t = time - inPoint; amp = 40 * Math.exp(-6 * t);\nseedRandom(index, false);\nvalue + [wiggle(25, amp)[0] - value[0], wiggle(25, amp)[1] - value[1]]" },
-    { cat: "Movimento", name: "Delay seguindo layer acima", target: "position", expr: "d = 0.1;\nthisComp.layer(index - 1).transform.position.valueAtTime(time - d)" },
-    { cat: "Movimento", name: "Look At (olhar para layer 1)", target: "rotation", expr: "p = thisComp.layer(1).transform.position;\nv = p - transform.position;\nradiansToDegrees(Math.atan2(v[1], v[0]))" },
+    { cat: "Movimento", name: "Wiggle só no X", target: "position", expr: "var w = wiggle(5, 30);\nvar v = value;\nv[0] = w[0];\nv" },
+    { cat: "Movimento", name: "Flutuar (hover)", target: "position", expr: "var amp = 15, freq = 1;\nvar v = value;\nv[1] += Math.sin(time * freq * Math.PI * 2) * amp;\nv" },
+    { cat: "Movimento", name: "Pêndulo / balanço", target: "rotation", expr: "var amp = 15, freq = 1, decay = 0.6;\nvalue + amp * Math.sin(freq * time * 2 * Math.PI) / Math.exp(decay * time)" },
+    { cat: "Movimento", name: "Rotação contínua", target: "rotation", expr: "value + time * 90" },
+    { cat: "Movimento", name: "Shake de câmera (impacto)", target: "position", expr: "var t = Math.max(0, time - inPoint);\nvar amp = 40 * Math.exp(-6 * t);\nwiggle(25, amp)" },
+    { cat: "Movimento", name: "Delay seguindo layer acima", target: "position", expr: "var d = 0.1;\n(index > 1) ? thisComp.layer(index - 1).transform.position.valueAtTime(time - d) : value" },
+    { cat: "Movimento", name: "Look At (olhar para layer 1)", target: "rotation", expr: "if (index > 1) {\n  var v = sub(thisComp.layer(1).transform.position, transform.position);\n  radiansToDegrees(Math.atan2(v[1], v[0]));\n} else { value; }" },
     { cat: "Movimento", name: "Stop motion (posterize)", target: "position", expr: "posterizeTime(8);\nvalue" },
+    { cat: "Movimento", name: "Órbita (círculo)", target: "position", expr: "var r = 150, speed = 1;\nvar v = value;\nv[0] += Math.cos(time * speed * Math.PI * 2) * r;\nv[1] += Math.sin(time * speed * Math.PI * 2) * r;\nv" },
 
     { cat: "Keyframes", name: "Loop (cycle)", target: "position", expr: "loopOut(\"cycle\")" },
     { cat: "Keyframes", name: "Loop ping-pong", target: "position", expr: "loopOut(\"pingpong\")" },
     { cat: "Keyframes", name: "Loop offset (continua)", target: "position", expr: "loopOut(\"offset\")" },
-    { cat: "Keyframes", name: "Inércia / Bounce", target: "scale", expr: "amp = .06; freq = 3; decay = 6;\nn = 0;\nif (numKeys > 0) { n = nearestKey(time).index; if (key(n).time > time) n--; }\nif (n == 0) { t = 0; } else { t = time - key(n).time; }\nif (n > 0 && t < 1) {\n  v = velocityAtTime(key(n).time - thisComp.frameDuration / 10);\n  value + v * amp * Math.sin(freq * t * 2 * Math.PI) / Math.exp(decay * t);\n} else { value; }" },
-    { cat: "Keyframes", name: "Bounce de queda (gravidade)", target: "position", expr: "e = .6; g = 4000; nMax = 6;\nn = 0;\nif (numKeys > 0) { n = nearestKey(time).index; if (key(n).time > time) n--; }\nif (n > 0) {\n  t = time - key(n).time;\n  v = -velocityAtTime(key(n).time - .001) * e;\n  vl = length(v);\n  if (value instanceof Array) { vu = (vl > 0) ? normalize(v) : [0,0,0]; } else { vu = (v < 0) ? -1 : 1; }\n  tCur = 0; segDur = 2 * vl / g; tNext = segDur; nb = 1;\n  while (tNext < t && nb <= nMax) { vl *= e; segDur *= e; tCur = tNext; tNext += segDur; nb++; }\n  if (nb <= nMax) { delta = t - tCur; value + vu * delta * (vl - g * delta / 2); } else { value; }\n} else { value; }" },
-    { cat: "Keyframes", name: "Squash & stretch", target: "scale", expr: "maxDev = 13; spd = 30; decay = 1.0;\nt = time - inPoint;\nx = value[0] + maxDev * Math.sin(spd * t) / Math.exp(decay * t);\ny = value[0] * value[1] / x;\n[x, y]" },
+    { cat: "Keyframes", name: "Inércia / Bounce", target: "scale", expr: "var amp = 0.06, freq = 3, decay = 6;\nvar n = 0;\nif (numKeys > 0) { n = nearestKey(time).index; if (key(n).time > time) n--; }\nvar t = (n == 0) ? 0 : time - key(n).time;\nif (n > 0 && t < 1) {\n  var v = velocityAtTime(key(n).time - thisComp.frameDuration / 10);\n  add(value, mul(v, amp * Math.sin(freq * t * 2 * Math.PI) / Math.exp(decay * t)));\n} else { value; }" },
+    { cat: "Keyframes", name: "Overshoot (elástico)", target: "position", expr: "var freq = 2.5, decay = 5;\nvar n = 0;\nif (numKeys > 0) { n = nearestKey(time).index; if (key(n).time > time) n--; }\nvar t = (n == 0) ? 0 : time - key(n).time;\nif (n > 0 && t < 2) {\n  var v = velocityAtTime(key(n).time - thisComp.frameDuration / 10);\n  add(value, mul(v, Math.sin(freq * t * 2 * Math.PI) / Math.exp(decay * t) / freq / 6));\n} else { value; }" },
+    { cat: "Keyframes", name: "Squash & stretch", target: "scale", expr: "var maxDev = 13, spd = 30, decay = 1.0;\nvar t = Math.max(0, time - inPoint);\nvar x = value[0] + maxDev * Math.sin(spd * t) / Math.exp(decay * t);\nvar v = value;\nv[0] = x;\nv[1] = value[0] * value[1] / x;\nv" },
 
-    { cat: "Texto", name: "Máquina de escrever", target: "sourceText", expr: "speed = 15;\nt = Math.max(0, time - inPoint);\ntext.sourceText.substr(0, Math.floor(t * speed))" },
-    { cat: "Texto", name: "Máquina de escrever + cursor", target: "sourceText", expr: "speed = 15;\nt = Math.max(0, time - inPoint);\ns = text.sourceText.substr(0, Math.floor(t * speed));\ns + ((Math.floor(time * 2) % 2) ? \"|\" : \" \")" },
-    { cat: "Texto", name: "Contador de números", target: "sourceText", expr: "start = 0; end = 1000; dur = 2; dec = 0;\nt = linear(time - inPoint, 0, dur, start, end);\nt.toFixed(dec).replace(/\\B(?=(\\d{3})+(?!\\d))/g, \".\")" },
-    { cat: "Texto", name: "Letras aleatórias (decode)", target: "sourceText", expr: "src = text.sourceText; dur = 1.2;\nchars = \"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#$%&\";\nn = Math.floor(linear(time - inPoint, 0, dur, 0, src.length));\nseedRandom(Math.floor(time * 20), true);\nout = src.substr(0, n);\nfor (i = n; i < src.length; i++) out += src[i] == \" \" ? \" \" : chars[Math.floor(random(chars.length))];\nout" },
-    { cat: "Texto", name: "Palavra por palavra", target: "sourceText", expr: "wps = 3;\nw = text.sourceText.split(\" \");\nn = Math.min(w.length, Math.floor((time - inPoint) * wps) + 1);\nw.slice(0, n).join(\" \")" },
-    { cat: "Texto", name: "Relógio / timer (mm:ss)", target: "sourceText", expr: "t = Math.max(0, time - inPoint);\nm = Math.floor(t / 60); s = Math.floor(t % 60);\n(m < 10 ? \"0\" : \"\") + m + \":\" + (s < 10 ? \"0\" : \"\") + s" },
-    { cat: "Texto", name: "MAIÚSCULAS automáticas", target: "sourceText", expr: "text.sourceText.toUpperCase()" },
-    { cat: "Texto", name: "Data de hoje", target: "sourceText", expr: "d = new Date(Date(0));\nd.getDate() + \"/\" + (d.getMonth() + 1) + \"/\" + d.getFullYear()" },
+    { cat: "Texto", name: "Máquina de escrever", target: "sourceText", expr: "var s = \"\" + value;\nvar speed = 15;\ns.substr(0, Math.floor(Math.max(0, time - inPoint) * speed))" },
+    { cat: "Texto", name: "Máquina de escrever + cursor", target: "sourceText", expr: "var s = \"\" + value;\nvar speed = 15;\nvar out = s.substr(0, Math.floor(Math.max(0, time - inPoint) * speed));\nout + ((Math.floor(time * 2) % 2) ? \"|\" : \" \")" },
+    { cat: "Texto", name: "Contador de números", target: "sourceText", expr: "var start = 0, end = 1000, dur = 2, dec = 0;\nvar n = linear(time - inPoint, 0, dur, start, end);\nn.toFixed(dec).replace(/\\B(?=(\\d{3})+(?!\\d))/g, \".\")" },
+    { cat: "Texto", name: "Contador com prefixo (R$ / %)", target: "sourceText", expr: "var start = 0, end = 100, dur = 2;\nvar pre = \"\", pos = \"%\";\npre + Math.round(linear(time - inPoint, 0, dur, start, end)) + pos" },
+    { cat: "Texto", name: "Letras aleatórias (decode)", target: "sourceText", expr: "var src = \"\" + value, dur = 1.2;\nvar chars = \"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#$%&\";\nvar n = Math.floor(linear(time - inPoint, 0, dur, 0, src.length));\nseedRandom(Math.floor(time * 20), true);\nvar out = src.substr(0, n);\nfor (var i = n; i < src.length; i++) out += (src.charAt(i) == \" \") ? \" \" : chars.charAt(Math.floor(random(chars.length)));\nout" },
+    { cat: "Texto", name: "Palavra por palavra", target: "sourceText", expr: "var wps = 3;\nvar w = (\"\" + value).split(\" \");\nvar n = Math.min(w.length, Math.floor(Math.max(0, time - inPoint) * wps) + 1);\nw.slice(0, n).join(\" \")" },
+    { cat: "Texto", name: "Uma palavra por vez", target: "sourceText", expr: "var wps = 3;\nvar w = (\"\" + value).split(\" \");\nw[Math.min(w.length - 1, Math.floor(Math.max(0, time - inPoint) * wps))]" },
+    { cat: "Texto", name: "Relógio / timer (mm:ss)", target: "sourceText", expr: "var t = Math.max(0, time - inPoint);\nvar m = Math.floor(t / 60), s = Math.floor(t % 60);\n(m < 10 ? \"0\" : \"\") + m + \":\" + (s < 10 ? \"0\" : \"\") + s" },
+    { cat: "Texto", name: "Contagem regressiva", target: "sourceText", expr: "var total = 10;\nvar t = Math.max(0, total - (time - inPoint));\nMath.ceil(t)" },
+    { cat: "Texto", name: "MAIÚSCULAS automáticas", target: "sourceText", expr: "(\"\" + value).toUpperCase()" },
+    { cat: "Texto", name: "Data de hoje", target: "sourceText", expr: "var d = new Date();\nd.getDate() + \"/\" + (d.getMonth() + 1) + \"/\" + d.getFullYear()" },
+    { cat: "Texto", name: "Nome da layer", target: "sourceText", expr: "thisLayer.name" },
+    { cat: "Texto", name: "Tempo do vídeo (timecode)", target: "sourceText", expr: "timeToTimecode(time)" },
 
-    { cat: "Opacidade", name: "Fade in/out automático", target: "opacity", expr: "f = 0.3;\nt1 = linear(time, inPoint, inPoint + f, 0, 100);\nt2 = linear(time, outPoint - f, outPoint, 100, 0);\nMath.min(t1, t2)" },
-    { cat: "Opacidade", name: "Piscar (blink)", target: "opacity", expr: "freq = 4;\nMath.sin(time * freq * Math.PI * 2) > 0 ? 100 : 0" },
-    { cat: "Opacidade", name: "Flicker aleatório", target: "opacity", expr: "seedRandom(Math.floor(time * 24), true);\nrandom() > .15 ? 100 : random(10, 50)" },
-    { cat: "Opacidade", name: "Fade por distância da câmera", target: "opacity", expr: "c = thisComp.activeCamera;\nd = length(toWorld(anchorPoint), c.toWorld([0,0,0]));\nlinear(d, 500, 3000, 100, 0)" },
+    { cat: "Opacidade", name: "Fade in/out automático", target: "opacity", expr: "var f = 0.3;\nMath.min(linear(time, inPoint, inPoint + f, 0, value), linear(time, outPoint - f, outPoint, value, 0))" },
+    { cat: "Opacidade", name: "Piscar (blink)", target: "opacity", expr: "var freq = 4;\n(Math.sin(time * freq * Math.PI * 2) > 0) ? value : 0" },
+    { cat: "Opacidade", name: "Flicker aleatório", target: "opacity", expr: "seedRandom(Math.floor(time * 24), true);\n(random() > 0.15) ? value : random(10, 50)" },
+    { cat: "Opacidade", name: "Fade por distância da câmera", target: "opacity", expr: "var c = null;\ntry { c = thisComp.activeCamera; } catch (e) {}\nif (c) { linear(length(toWorld(anchorPoint), c.toWorld([0, 0, 0])), 500, 3000, value, 0); } else { value; }" },
 
-    { cat: "Escala", name: "Pulsar no ritmo (BPM)", target: "scale", expr: "bpm = 120; amt = 8;\nb = (time * bpm / 60) % 1;\ns = amt * Math.exp(-b * 8);\nvalue + [s, s]" },
-    { cat: "Escala", name: "Escala pelo áudio (Audio Amplitude)", target: "scale", expr: "a = thisComp.layer(\"Audio Amplitude\").effect(\"Both Channels\")(\"Slider\");\ns = linear(a, 0, 30, 100, 130);\n[s, s]" },
-    { cat: "Escala", name: "Escala proporcional ao comp", target: "scale", expr: "s = thisComp.width / 1920 * 100;\n[s, s]" },
+    { cat: "Escala", name: "Pulsar no ritmo (BPM)", target: "scale", expr: "var bpm = 120, amt = 8;\nvar b = (time * bpm / 60) % 1;\nvar s = amt * Math.exp(-b * 8);\nvar v = value;\nv[0] += s; v[1] += s;\nv" },
+    { cat: "Escala", name: "Escala pelo áudio (Audio Amplitude)", target: "scale", expr: "var a = 0;\ntry { a = thisComp.layer(\"Audio Amplitude\").effect(\"Both Channels\")(\"Slider\"); } catch (e) {}\nvar s = linear(a, 0, 30, 100, 130);\nvar v = value;\nv[0] = value[0] * s / 100; v[1] = value[1] * s / 100;\nv" },
+    { cat: "Escala", name: "Respirar (scale suave)", target: "scale", expr: "var amt = 3, freq = 0.5;\nvar s = 1 + Math.sin(time * freq * Math.PI * 2) * amt / 100;\nmul(value, s)" },
+    { cat: "Escala", name: "Escala proporcional ao comp", target: "scale", expr: "var s = thisComp.width / 1920;\nmul(value, s)" },
 
-    { cat: "Shape/Layout", name: "Caixa que acompanha o texto (Size)", target: "ADBE Vector Rect Size", expr: "L = thisComp.layer(index - 1); pad = 40;\nr = L.sourceRectAtTime(time, false);\n[r.width + pad * 2, r.height + pad]" },
-    { cat: "Shape/Layout", name: "Anchor no centro do texto", target: "anchor", expr: "r = sourceRectAtTime(time, false);\n[r.left + r.width / 2, r.top + r.height / 2]" },
-    { cat: "Shape/Layout", name: "Grudar no canto inferior", target: "position", expr: "m = 60;\n[thisComp.width / 2, thisComp.height - m]" },
-    { cat: "Shape/Layout", name: "Parallax (z = profundidade)", target: "position", expr: "depth = 0.3;\nc = thisComp.layer(\"MT Null\").transform.position;\nvalue + (c - [thisComp.width/2, thisComp.height/2]) * depth" }
+    { cat: "Shape/Layout", name: "Caixa que acompanha o texto (Size)", target: "ADBE Vector Rect Size", expr: "var pad = 40;\nif (index > 1) {\n  var L = thisComp.layer(index - 1);\n  var r = L.sourceRectAtTime(time, false);\n  [r.width + pad * 2, r.height + pad];\n} else { value; }" },
+    { cat: "Shape/Layout", name: "Anchor no centro do texto", target: "anchor", expr: "var r = sourceRectAtTime(time, false);\nvar v = value;\nv[0] = r.left + r.width / 2;\nv[1] = r.top + r.height / 2;\nv" },
+    { cat: "Shape/Layout", name: "Grudar no canto inferior", target: "position", expr: "var m = 60;\nvar v = value;\nv[0] = thisComp.width / 2;\nv[1] = thisComp.height - m;\nv" },
+    { cat: "Shape/Layout", name: "Parallax (pela posição da layer 1)", target: "position", expr: "var depth = 0.3;\nif (index > 1) {\n  var c = thisComp.layer(1).transform.position;\n  var v = value;\n  v[0] += (c[0] - thisComp.width / 2) * depth;\n  v[1] += (c[1] - thisComp.height / 2) * depth;\n  v;\n} else { value; }" }
+  ],
+
+  /* BIBLIOTECA — presets de texto aplicados como Text Animators de verdade (editáveis no AE) */
+  textPresets: [
+    { cat: "Texto · Entrada", id: "t_fade_ch", name: "Fade Characters", based: "chars", props: { opacity: 0 }, dir: "in", dur: 1 },
+    { cat: "Texto · Entrada", id: "t_fade_wd", name: "Fade Words", based: "words", props: { opacity: 0 }, dir: "in", dur: 1 },
+    { cat: "Texto · Entrada", id: "t_fade_ln", name: "Fade Lines", based: "lines", props: { opacity: 0 }, dir: "in", dur: 1 },
+    { cat: "Texto · Entrada", id: "t_fadeup_ch", name: "Fade Up Characters", based: "chars", props: { opacity: 0, pos: [0, 40] }, dir: "in", dur: 0.9 },
+    { cat: "Texto · Entrada", id: "t_fadedown_wd", name: "Fade Down Words", based: "words", props: { opacity: 0, pos: [0, -40] }, dir: "in", dur: 0.9 },
+    { cat: "Texto · Entrada", id: "t_slide_wd", name: "Slide Words", based: "words", props: { opacity: 0, pos: [120, 0] }, dir: "in", dur: 0.9 },
+    { cat: "Texto · Entrada", id: "t_type", name: "Typewriter", based: "chars", props: { opacity: 0 }, smooth: 0, dir: "in", dur: 1.2 },
+    { cat: "Texto · Entrada", id: "t_blur_ch", name: "Blur In Characters", based: "chars", props: { opacity: 0, blur: 40 }, dir: "in", dur: 1 },
+    { cat: "Texto · Entrada", id: "t_blur_wd", name: "Blur Zoom Words", based: "words", props: { opacity: 0, blur: 30, scale: [130, 130] }, dir: "in", dur: 1 },
+    { cat: "Texto · Entrada", id: "t_pop_ch", name: "Pop Characters", based: "chars", props: { opacity: 0, scale: [0, 0] }, dir: "in", dur: 0.8 },
+    { cat: "Texto · Entrada", id: "t_pop_wd", name: "Pop Words", based: "words", props: { opacity: 0, scale: [0, 0] }, dir: "in", dur: 0.8 },
+    { cat: "Texto · Entrada", id: "t_zoomout_ch", name: "Zoom Out Characters", based: "chars", props: { opacity: 0, scale: [300, 300], blur: 10 }, dir: "in", dur: 1 },
+    { cat: "Texto · Entrada", id: "t_rot_ch", name: "Rotate In Characters", based: "chars", props: { opacity: 0, rot: -90, pos: [0, 30] }, dir: "in", dur: 1 },
+    { cat: "Texto · Entrada", id: "t_drop_ch", name: "Drop In Characters", based: "chars", props: { opacity: 0, pos: [0, -120] }, dir: "in", dur: 1 },
+    { cat: "Texto · Entrada", id: "t_skew_wd", name: "Skew In Words", based: "words", props: { opacity: 0, skew: 40, pos: [60, 0] }, dir: "in", dur: 0.9 },
+    { cat: "Texto · Entrada", id: "t_track", name: "Tracking In", based: "lines", props: { opacity: 0, track: 80, blur: 15 }, dir: "in", dur: 1.2 },
+    { cat: "Texto · Entrada", id: "t_cine", name: "Cinematic", based: "lines", props: { opacity: 0, track: 140, blur: 25, scale: [110, 110] }, dir: "in", dur: 1.6 },
+    { cat: "Texto · Entrada", id: "t_rand_fade", name: "Random Fade", based: "chars", props: { opacity: 0 }, order: "rand", dir: "in", dur: 1 },
+    { cat: "Texto · Entrada", id: "t_rand_pop", name: "Random Pop", based: "chars", props: { opacity: 0, scale: [0, 0] }, order: "rand", dir: "in", dur: 0.9 },
+    { cat: "Texto · Entrada", id: "t_rev_fade", name: "Reverse Fade", based: "chars", props: { opacity: 0, pos: [-30, 0] }, order: "rev", dir: "in", dur: 1 },
+    { cat: "Texto · Entrada", id: "t_color", name: "Color Sweep", based: "chars", props: { fill: [0.55, 0.35, 1] }, dir: "in", dur: 1 },
+
+    { cat: "Texto · Saída", id: "o_fade_ch", name: "Fade Out Characters", based: "chars", props: { opacity: 0 }, dir: "out", dur: 0.9 },
+    { cat: "Texto · Saída", id: "o_fade_wd", name: "Fade Out Words", based: "words", props: { opacity: 0 }, dir: "out", dur: 0.9 },
+    { cat: "Texto · Saída", id: "o_up_wd", name: "Slide Out Up", based: "words", props: { opacity: 0, pos: [0, -60] }, dir: "out", dur: 0.8 },
+    { cat: "Texto · Saída", id: "o_blur", name: "Blur Out", based: "chars", props: { opacity: 0, blur: 40 }, dir: "out", dur: 0.9 },
+    { cat: "Texto · Saída", id: "o_pop", name: "Pop Out", based: "chars", props: { opacity: 0, scale: [0, 0] }, dir: "out", dur: 0.7 },
+    { cat: "Texto · Saída", id: "o_rand", name: "Random Fade Out", based: "chars", props: { opacity: 0 }, order: "rand", dir: "out", dur: 0.9 },
+    { cat: "Texto · Saída", id: "o_type", name: "Typewriter Out", based: "chars", props: { opacity: 0 }, smooth: 0, order: "rev", dir: "out", dur: 0.8 },
+    { cat: "Texto · Saída", id: "o_track", name: "Tracking Out", based: "lines", props: { opacity: 0, track: 80, blur: 15 }, dir: "out", dur: 1 },
+
+    { cat: "Texto · Loop", id: "l_wave", name: "Wave", based: "chars", props: { pos: [0, -25] }, dir: "loop", loop: "wave" },
+    { cat: "Texto · Loop", id: "l_bounce", name: "Bouncing Letters", based: "chars", props: { pos: [0, -40] }, dir: "loop", loop: "bounce" },
+    { cat: "Texto · Loop", id: "l_wiggle", name: "Wiggle Letters", based: "chars", props: { pos: [0, 12], rot: 8 }, dir: "loop", loop: "wiggle" },
+    { cat: "Texto · Loop", id: "l_flicker", name: "Flicker", based: "chars", props: { opacity: 0 }, dir: "loop", loop: "flicker" },
+    { cat: "Texto · Loop", id: "l_pulse", name: "Pulse", based: "chars", props: { scale: [125, 125] }, dir: "loop", loop: "pulse" },
+    { cat: "Texto · Loop", id: "l_color", name: "Color Wave", based: "chars", props: { fill: [0.25, 0.9, 1] }, dir: "loop", loop: "color" },
+    { cat: "Texto · Loop", id: "l_breathe", name: "Breathe", based: "lines", props: { track: 30 }, dir: "loop", loop: "breathe" }
+  ],
+
+  /* caixas de texto, elementos e social (criados por mf_addElement) */
+  elements: [
+    { cat: "Caixas de texto", id: "box_pill", name: "Pill branca", prev: "pill" },
+    { cat: "Caixas de texto", id: "box_solid", name: "Caixa colorida", prev: "solid" },
+    { cat: "Caixas de texto", id: "box_black", name: "Caixa preta", prev: "black" },
+    { cat: "Caixas de texto", id: "box_outline", name: "Só contorno", prev: "outline" },
+    { cat: "Caixas de texto", id: "box_underline", name: "Sublinhado", prev: "underline" },
+    { cat: "Caixas de texto", id: "box_marker", name: "Marca-texto", prev: "marker" },
+    { cat: "Elementos", id: "el_burst", name: "Burst", prev: "burst" },
+    { cat: "Elementos", id: "el_ring", name: "Anel", prev: "ring" },
+    { cat: "Elementos", id: "el_swoosh", name: "Swoosh", prev: "swoosh" },
+    { cat: "Elementos", id: "el_arrow", name: "Seta", prev: "arrow" },
+    { cat: "Elementos", id: "el_sparkle", name: "Brilho", prev: "sparkle" },
+    { cat: "Social", id: "so_subscribe", name: "Inscreva-se", prev: "subscribe" },
+    { cat: "Social", id: "so_follow", name: "Siga @perfil", prev: "follow" }
+  ],
+
+  /* MODELOS DE LEGENDA (o painel preenche os campos e manda os extras) */
+  captionTemplates: [
+    { id: "filme", name: "Filme", desc: "Pequena, glow, segue a cabeça", font: "Arial-BoldMT", size: 34, upper: true, tracking: 40, color: [1, 1, 1], glow: true, glowStrength: 0.7, shadow: true, anim: "fade", follow: true, wordsPer: 6 },
+    { id: "tiktok_glow", name: "TikTok Glow", desc: "Glow, sombra, degradê", font: "Arial-Black", size: 58, upper: true, color: [1, 1, 1], gradient: [[1, 1, 1], [0.72, 0.72, 0.8]], glow: true, shadow: true, anim: "pop", wordsPer: 4 },
+    { id: "tiktok_rays", name: "TikTok Raios", desc: "Glow, raios, bevel", font: "Arial-Black", size: 58, upper: true, color: [1, 1, 1], glow: true, rays: true, bevel: true, shadow: true, anim: "pop", wordsPer: 4 },
+    { id: "criador", name: "Criador", desc: "Amarelo com contorno", font: "Arial-BoldMT", size: 62, color: [1, 0.8, 0.05], stroke: 6, glow: false, shadow: true, anim: "pop", y: 0.72, wordsPer: 5 },
+    { id: "hormozi", name: "Destaque", desc: "Palavra atual em verde", font: "Arial-Black", size: 70, upper: true, color: [1, 1, 1], stroke: 8, glow: false, shadow: true, words: "highlight", highlight: [0.2, 1, 0.35], highlightScale: 115, anim: "pop", y: 0.7, wordsPer: 3 },
+    { id: "karaoke", name: "Karaokê", desc: "Palavra atual colorida", font: "Arial-BoldMT", size: 60, color: [1, 1, 1], glow: false, shadow: true, words: "highlight", highlight: [0.1, 0.9, 1], highlightScale: 100, anim: "none", wordsPer: 6 },
+    { id: "palavra", name: "Palavra a palavra", desc: "Cada palavra aparece na hora", font: "Arial-Black", size: 66, upper: true, color: [1, 1, 1], stroke: 6, glow: false, shadow: true, words: "reveal", anim: "none", wordsPer: 4 },
+    { id: "caixa", name: "Caixa TikTok", desc: "Texto preto em caixa branca", font: "Arial-BoldMT", size: 50, color: [0.05, 0.05, 0.07], glow: false, shadow: false, box: { kind: "box", color: [1, 1, 1], round: 18, padX: 22, padY: 12 }, anim: "pop", wordsPer: 5 },
+    { id: "neon", name: "Neon", desc: "Glow ciano forte", font: "Arial-BoldMT", size: 60, lower: true, color: [1, 1, 1], glow: true, glowStrength: 1.4, glowColor: [0.1, 0.9, 1], shadow: false, anim: "fade", wordsPer: 4 },
+    { id: "minimal", name: "Minimal", desc: "Limpa, sem efeitos", font: "ArialMT", size: 48, color: [1, 1, 1], glow: false, shadow: true, shadowSoft: 8, shadowDist: 3, anim: "fade", wordsPer: 6 }
   ],
 
   /* Presets procedurais (aplicados via ExtendScript, sem precisar de .ffx) */
