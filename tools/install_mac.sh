@@ -1,7 +1,7 @@
 #!/bin/bash
 # MagicTouch - instalador macOS
 set -e
-for v in 9 10 11 12; do defaults write com.adobe.CSXS.$v PlayerDebugMode 1; done
+for v in 9 10 11 12 13; do defaults write com.adobe.CSXS.$v PlayerDebugMode 1; done
 SRC="$(cd "$(dirname "$0")/.." && pwd)"
 DEST="$HOME/Library/Application Support/Adobe/CEP/extensions/MagicTouch"
 rm -rf "$DEST"; mkdir -p "$DEST"

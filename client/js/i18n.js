@@ -18,6 +18,37 @@
     "Modo preview (fora do After Effects)": ["Preview mode (outside After Effects)", "Modo vista previa (fuera de After Effects)", "Mode aperçu (hors After Effects)"],
     "Idioma da interface": ["Interface language", "Idioma de la interfaz", "Langue de l'interface"],
 
+    /* ---------- nomes enviados ao projeto ---------- */
+    "MT IA": ["MT AI", "MT IA", "MT IA"], "MT Downloads": ["MT Downloads", "MT Descargas", "MT Téléchargements"],
+
+    /* ---------- erros do After Effects (ExtendScript) ---------- */
+    "Abra/selecione uma composição.": ["Open/select a composition.", "Abre/selecciona una composición.", "Ouvrez/sélectionnez une composition."],
+    "Selecione pelo menos uma layer.": ["Select at least one layer.", "Selecciona al menos una capa.", "Sélectionnez au moins un calque."],
+    "Nenhum par de keyframes encontrado (selecione 2+ keyframes).": ["No keyframe pair found (select 2+ keyframes).", "No se encontró ningún par de keyframes (selecciona 2+ keyframes).", "Aucune paire de keyframes trouvée (sélectionnez 2+ keyframes)."],
+    "Sem keyframes.": ["No keyframes.", "Sin keyframes.", "Aucune keyframe."],
+    "Selecione 2 keyframes.": ["Select 2 keyframes.", "Selecciona 2 keyframes.", "Sélectionnez 2 keyframes."],
+    "Selecione uma propriedade (ou layer com a propriedade alvo).": ["Select a property (or a layer with the target property).", "Selecciona una propiedad (o una capa con la propiedad destino).", "Sélectionnez une propriété (ou un calque avec la propriété cible)."],
+    "A layer selecionada não tem efeitos.": ["The selected layer has no effects.", "La capa seleccionada no tiene efectos.", "Le calque sélectionné n'a aucun effet."],
+    "Nenhuma layer de vídeo/áudio com arquivo encontrada.": ["No video/audio layer with a file was found.", "No se encontró ninguna capa de video/audio con archivo.", "Aucun calque vidéo/audio avec fichier trouvé."],
+    "Falha ao exportar o frame.": ["Failed to export the frame.", "Error al exportar el frame.", "Échec de l'export de l'image."],
+    "Salve o projeto uma vez primeiro.": ["Save the project once first.", "Guarda el proyecto una vez primero.", "Enregistrez d'abord le projet une fois."],
+    "Selecione footage no painel Project.": ["Select footage in the Project panel.", "Selecciona footage en el panel Project.", "Sélectionnez un métrage dans le panneau Projet."],
+    "Sem resposta do After Effects": ["No response from After Effects", "Sin respuesta de After Effects", "Pas de réponse d'After Effects"],
+    "Erro": ["Error", "Error", "Erreur"],
+
+    /* ---------- servidor de IA / links ---------- */
+    "Iniciando...": ["Starting...", "Iniciando...", "Démarrage..."], "Concluído": ["Done", "Completado", "Terminé"],
+    "Transcrevendo áudio...": ["Transcribing audio...", "Transcribiendo audio...", "Transcription de l'audio..."],
+    "Não foi possível abrir o vídeo.": ["Could not open the video.", "No se pudo abrir el video.", "Impossible d'ouvrir la vidéo."],
+    "Nenhum rosto encontrado no trecho.": ["No face found in this range.", "No se encontró ningún rostro en el tramo.", "Aucun visage trouvé dans cet extrait."],
+    "Segmentando...": ["Segmenting...", "Segmentando...", "Segmentation..."], "Gerando PNG...": ["Generating PNG...", "Generando PNG...", "Génération du PNG..."],
+    "Detectando o que remover...": ["Detecting what to remove...", "Detectando qué quitar...", "Détection de ce qu'il faut supprimer..."],
+    "Preenchendo com IA...": ["Filling with AI...", "Rellenando con IA...", "Remplissage par IA..."],
+    "Baixando pasta do Google Drive...": ["Downloading Google Drive folder...", "Descargando carpeta de Google Drive...", "Téléchargement du dossier Google Drive..."],
+    "Baixando do Google Drive...": ["Downloading from Google Drive...", "Descargando de Google Drive...", "Téléchargement depuis Google Drive..."],
+    "Nenhum link.": ["No links.", "Ningún enlace.", "Aucun lien."], "Lendo arquivos...": ["Reading files...", "Leyendo archivos...", "Lecture des fichiers..."],
+    "job não encontrado": ["job not found", "tarea no encontrada", "tâche introuvable"], "rota desconhecida": ["unknown route", "ruta desconocida", "route inconnue"],
+
     /* ---------- barra lateral / blocos ---------- */
     "Início": ["Home", "Inicio", "Accueil"],
     "Leitor de links": ["Link reader", "Lector de enlaces", "Lecteur de liens"],
@@ -158,7 +189,7 @@
     "Nenhuma": ["None", "Ninguna", "Aucune"], "Seguir a cabeça": ["Follow the head", "Seguir la cabeza", "Suivre la tête"],
     "Face tracking automático": ["Automatic face tracking", "Face tracking automático", "Face tracking automatique"], "Precisão": ["Precision", "Precisión", "Précision"],
     "Todo frame": ["Every frame", "Cada frame", "Chaque image"], "Gerar legendas": ["Generate captions", "Generar subtítulos", "Générer les sous-titres"],
-    "Só face track (null \"MT Face Track\")": ["Face track only (null \"MT Face Track\")", "Solo face track (null \"MT Face Track\")", "Face track seul (null « MT Face Track »)"],
+    "Só face track (null \"MT Rastreio Facial\")": ["Face track only (null \"MT Face Track\")", "Solo face track (null \"MT Seguimiento Facial\")", "Face track seul (null « MT Suivi du Visage »)"],
     "Editar texto antes de criar": ["Edit text before creating", "Editar el texto antes de crear", "Modifier le texte avant de créer"],
     "Criar a partir do texto": ["Create from text", "Crear a partir del texto", "Créer à partir du texte"], "inicio|fim|texto": ["start|end|text", "inicio|fin|texto", "début|fin|texte"],
 
@@ -253,6 +284,26 @@
 
   /* mensagens dinâmicas: [regex, [en, es, fr]] — $1, $2 são traduzidos de novo se possível */
   var PATTERNS = [
+    [/^BG removido - (.*)$/, ["BG removed - $1", "Fondo quitado - $1", "Fond supprimé - $1"]],
+    [/^Preset não encontrado: (.*)$/, ["Preset not found: $1", "Preset no encontrado: $1", "Preset introuvable : $1"]],
+    [/^Preset desconhecido: (.*)$/, ["Unknown preset: $1", "Preset desconocido: $1", "Preset inconnu : $1"]],
+    [/^Ferramenta desconhecida: (.*)$/, ["Unknown tool: $1", "Herramienta desconocida: $1", "Outil inconnu : $1"]],
+    [/^Efeito não disponível: (.*)$/, ["Effect not available: $1", "Efecto no disponible: $1", "Effet non disponible : $1"]],
+    [/^Arquivo não existe: (.*)$/, ["File does not exist: $1", "El archivo no existe: $1", "Le fichier n'existe pas : $1"]],
+    [/^Carregando modelo Whisper '(.*)'\.\.\.$/, ["Loading Whisper model '$1'...", "Cargando modelo Whisper '$1'...", "Chargement du modèle Whisper « $1 »..."]],
+    [/^Transcrevendo\.\.\. (\d+)s \/ (\d+)s$/, ["Transcribing... $1s / $2s", "Transcribiendo... $1s / $2s", "Transcription... $1s / $2s"]],
+    [/^Rastreando rosto\.\.\. frame (\d+)$/, ["Tracking face... frame $1", "Siguiendo rostro... frame $1", "Suivi du visage... image $1"]],
+    [/^Baixando\.\.\. (.*)$/, ["Downloading... $1", "Descargando... $1", "Téléchargement... $1"]],
+    [/^Baixando (.*)\.\.\. (\d+)\/(\d+) MB$/, ["Downloading $1... $2/$3 MB", "Descargando $1... $2/$3 MB", "Téléchargement de $1... $2/$3 Mo"]],
+    [/^Link (\d+)\/(\d+)\.\.\.$/, ["Link $1/$2...", "Enlace $1/$2...", "Lien $1/$2..."]],
+    [/^Extraindo (.*)\.\.\.$/, ["Extracting $1...", "Extrayendo $1...", "Extraction de $1..."]],
+    [/^Lendo (.*)\.\.\.$/, ["Reading $1...", "Leyendo $1...", "Lecture de $1..."]],
+    [/^Não consegui extrair (.*) — instale o 7-Zip ou 'pip install rarfile py7zr'\.$/, ["Could not extract $1 — install 7-Zip or 'pip install rarfile py7zr'.", "No se pudo extraer $1 — instala 7-Zip o 'pip install rarfile py7zr'.", "Impossible d'extraire $1 — installez 7-Zip ou 'pip install rarfile py7zr'."]],
+    [/^Dependência ausente: (.*) — rode: (.*)$/, ["Missing dependency: $1 — run: $2", "Falta una dependencia: $1 — ejecuta: $2", "Dépendance manquante : $1 — exécutez : $2"]],
+    [/^Falha ao iniciar Python: (.*)$/, ["Failed to start Python: $1", "Error al iniciar Python: $1", "Échec du démarrage de Python : $1"]],
+    [/^Node não disponível — rode server\/start_server manualmente\.$/, ["Node not available — run server/start_server manually.", "Node no disponible — ejecuta server/start_server manualmente.", "Node indisponible — lancez server/start_server manuellement."]],
+    [/^No module named '([^']+)'$/, ["Missing Python module '$1' — run: pip install -r server/requirements.txt", "Falta el módulo de Python '$1' — ejecuta: pip install -r server/requirements.txt", "Module Python '$1' manquant — exécutez : pip install -r server/requirements.txt"]],
+    [/^Failed to fetch$/, ["AI server unreachable", "Servidor de IA inaccesible", "Serveur IA injoignable"]],
     [/^(.+) ✓$/, ["$1 ✓", "$1 ✓", "$1 ✓"]],
     [/^(.+) adicionado$/, ["$1 added", "$1 añadido", "$1 ajouté"]],
     [/^(.+) aplicado$/, ["$1 applied", "$1 aplicado", "$1 appliqué"]],
@@ -371,6 +422,7 @@
     try { localStorage.setItem("mt_lang", lang); } catch (e) {}
     document.documentElement.lang = lang === "pt" ? "pt-BR" : lang;
     var sel = document.getElementById("langSel"); if (sel) sel.value = lang;
+    if (window.MFHost && window.MFHost.inAE) window.MFHost.call("mf_setLang", { lang: lang }).catch(function () {});
     apply(document.body);
   }
 

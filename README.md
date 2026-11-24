@@ -35,13 +35,18 @@ Painel CEP (After Effects 2020+) com visual "aurora glass" que junta ferramentas
 
 ## Instalação
 
-1. **Windows:** `tools/install_windows.bat` · **macOS:** `bash tools/install_mac.sh`
-2. Reabra o After Effects → **Window › Extensions › MagicTouch**.
-3. Para IA, links e pacotes instale **Python 3.10–3.12** e `pip install -r server/requirements.txt` (o instalador já tenta). O painel inicia o servidor sozinho.
-   - `.zip` funciona sem nada extra; `.rar` usa `rarfile` + **7-Zip/unrar** instalado; `.7z` usa `py7zr` ou 7-Zip.
-   - Google Drive usa `gdown` (links públicos / "qualquer pessoa com o link").
+📖 **Guia completo passo a passo (do GitHub até rodar no AE, IA e solução de problemas): [docs/INSTALACAO.md](docs/INSTALACAO.md)**
 
-Sem Python: keyframes, flow, motion, expressões, align, efeitos, organizador, mídias ausentes, render e projeto de presets a partir de **.ffx soltos ou pasta** continuam funcionando.
+Resumo:
+1. **Code › Download ZIP** (ou `git clone`) e extraia.
+2. **Windows:** `tools/install_windows.bat` · **macOS:** `bash tools/install_mac.sh`.
+3. No AE: **Preferences › Scripting & Expressions › Allow Scripts to Write Files and Access Network**.
+4. **Window › Extensions › MagicTouch**.
+5. (IA) Python 3.10–3.12 + `pip install -r server/requirements.txt`, depois **Render › Iniciar servidor**.
+
+## Idiomas
+
+Seletor no topo (🌐): **PT-BR, English, Español, Français**. Traduz a interface, as mensagens do servidor de IA, os erros do After Effects e também os **nomes criados no projeto** (layers, pastas, controles do face track — ex.: `MT Rastreio Facial` / `MT Face Track` / `MT Seguimiento Facial` / `MT Suivi du Visage`).
 
 ## Estrutura
 

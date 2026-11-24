@@ -80,6 +80,56 @@ function propPath(p) {
     return a.join("/");
 }
 
+
+/* ------------------------------------------------------------------ */
+/* Idioma dos nomes criados no projeto (layers, pastas, efeitos)       */
+/* ------------------------------------------------------------------ */
+var MT_LANG = "pt";
+var MT_LI = { pt: 0, en: 1, es: 2, fr: 3 };
+var MT_NAMES = {
+    "null": ["MT Null", "MT Null", "MT Null", "MT Null"],
+    adjustment: ["MT Ajuste", "MT Adjustment", "MT Ajuste", "MT Réglage"],
+    solid: ["MT Sólido", "MT Solid", "MT Sólido", "MT Solide"],
+    camera: ["MT Câmera", "MT Camera", "MT Cámara", "MT Caméra"],
+    text: ["TEXTO", "TEXT", "TEXTO", "TEXTE"],
+    precomp: ["MT Pré-comp", "MT Precomp", "MT Precomp", "MT Précomp"],
+    blurIn: ["MT Desfoque de entrada", "MT Blur In", "MT Desenfoque de entrada", "MT Flou d'entrée"],
+    glitch: ["MT Glitch", "MT Glitch", "MT Glitch", "MT Glitch"],
+    glowIn: ["MT Deep Glow Interno", "MT Deep Glow Inner", "MT Deep Glow Interno", "MT Deep Glow Intérieur"],
+    glowOut: ["MT Deep Glow Externo", "MT Deep Glow Outer", "MT Deep Glow Externo", "MT Deep Glow Extérieur"],
+    transition: ["MT Transição", "MT Transition", "MT Transición", "MT Transition"],
+    cc: ["MT Cor", "MT Color", "MT Color", "MT Couleur"],
+    vignette: ["MT Vinheta", "MT Vignette", "MT Viñeta", "MT Vignette"],
+    faceTrack: ["MT Rastreio Facial", "MT Face Track", "MT Seguimiento Facial", "MT Suivi du Visage"],
+    face: ["Rosto", "Face", "Rostro", "Visage"],
+    faceSize: ["Tamanho do rosto", "Face Size", "Tamaño del rostro", "Taille du visage"],
+    offX: ["Deslocamento X", "Offset X", "Desplazamiento X", "Décalage X"],
+    offY: ["Deslocamento Y", "Offset Y", "Desplazamiento Y", "Décalage Y"],
+    smooth: ["Suavizar", "Smooth", "Suavizado", "Lissage"],
+    caption: ["LEG", "CAP", "SUB", "ST"],
+    precompFolder: ["MT Pré-comps", "MT Precomps", "MT Precomps", "MT Précomps"],
+    fComps: ["01 Comps", "01 Comps", "01 Comps", "01 Compositions"],
+    fVideos: ["02 Vídeos", "02 Videos", "02 Videos", "02 Vidéos"],
+    fImages: ["03 Imagens", "03 Images", "03 Imágenes", "03 Images"],
+    fAudio: ["04 Áudio", "04 Audio", "04 Audio", "04 Audio"],
+    fSolids: ["05 Sólidos", "05 Solids", "05 Sólidos", "05 Solides"],
+    kVideo: ["Vídeos", "Videos", "Videos", "Vidéos"],
+    kAudio: ["Áudio", "Audio", "Audio", "Audio"],
+    kImage: ["Imagens", "Images", "Imágenes", "Images"],
+    kAep: ["Projetos AEP", "AEP Projects", "Proyectos AEP", "Projets AEP"],
+    imports: ["MT Importações", "MT Imports", "MT Importaciones", "MT Imports"],
+    pack: ["Pacote", "Package", "Paquete", "Archive"],
+    newComp: ["MT Comp", "MT Comp", "MT Comp", "MT Comp"],
+    rect: ["Retângulo", "Rectangle", "Rectángulo", "Rectangle"],
+    circle: ["Círculo", "Circle", "Círculo", "Cercle"],
+    star: ["Estrela", "Star", "Estrella", "Étoile"],
+    path: ["Caminho", "Path", "Trazado", "Tracé"],
+    shape: ["Forma", "Shape", "Forma", "Forme"],
+    control: ["Controle", "Control", "Control", "Contrôle"]
+};
+function N(k) { var r = MT_NAMES[k]; return r ? r[MT_LI[MT_LANG] || 0] : k; }
+function mf_setLang(arg) { var o = parseArg(arg); if (MT_LI[o.lang] !== undefined) MT_LANG = o.lang; return ok({ lang: MT_LANG }); }
+
 /* ------------------------------------------------------------------ */
 /* Keyframes: captura e recriação                                       */
 /* ------------------------------------------------------------------ */
@@ -301,16 +351,16 @@ function mf_layerTool(arg) {
         var o = parseArg(arg), comp = activeComp(), L, i, nl;
         switch (o.tool) {
             case "null":
-                nl = comp.layers.addNull(); nl.name = "MT Null"; break;
+                nl = comp.layers.addNull(); nl.name = N("null"); break;
             case "adjustment":
-                nl = comp.layers.addSolid([1, 1, 1], "MT Adjustment", comp.width, comp.height, comp.pixelAspect, comp.duration);
+                nl = comp.layers.addSolid([1, 1, 1], N("adjustment"), comp.width, comp.height, comp.pixelAspect, comp.duration);
                 nl.adjustmentLayer = true; nl.label = 5; break;
             case "solid":
-                nl = comp.layers.addSolid(o.color || [0, 0, 0], "MT Solid", comp.width, comp.height, comp.pixelAspect, comp.duration); break;
+                nl = comp.layers.addSolid(o.color || [0, 0, 0], N("solid"), comp.width, comp.height, comp.pixelAspect, comp.duration); break;
             case "camera":
-                nl = comp.layers.addCamera("MT Camera", [comp.width / 2, comp.height / 2]); break;
+                nl = comp.layers.addCamera(N("camera"), [comp.width / 2, comp.height / 2]); break;
             case "text":
-                nl = comp.layers.addText(o.text || "TEXTO"); break;
+                nl = comp.layers.addText(o.text || N("text")); break;
             case "split":
                 L = selLayers(comp, true);
                 for (i = 0; i < L.length; i++) {
@@ -355,7 +405,7 @@ function mf_layerTool(arg) {
             case "precompose":
                 L = selLayers(comp, true);
                 var idx = []; for (i = 0; i < L.length; i++) idx.push(L[i].index);
-                comp.layers.precompose(idx, o.name || "MT Precomp", true); break;
+                comp.layers.precompose(idx, o.name || N("precomp"), true); break;
             case "motionBlur":
                 L = selLayers(comp, true); comp.motionBlur = true;
                 for (i = 0; i < L.length; i++) L[i].motionBlur = !L[i].motionBlur; break;
@@ -647,7 +697,7 @@ function mf_applyMotion(arg) {
                 case "in_zoom": keyPair(sc, a, [S[0] * 2.5, S[1] * 2.5, S[2] || 100], a + d, S); keyPair(op, a, 0, a + d * 0.5, 100); break;
                 case "in_rotate": keyPair(rot, a, -90, a + d, 0); keyPair(sc, a, [0, 0, 100], a + d, S); break;
                 case "in_blur":
-                    var bl = addEffect(ly, "ADBE Gaussian Blur 2"); bl.name = "MT Blur In";
+                    var bl = addEffect(ly, "ADBE Gaussian Blur 2"); bl.name = N("blurIn");
                     keyPair(bl.property(1), a, 80, a + d, 0); keyPair(op, a, 0, a + d * 0.5, 100); break;
                 case "zoom_slow": keyPair(sc, a, S, b, [S[0] * 1.15, S[1] * 1.15, S[2] || 100], false); break;
                 case "shake": pos.expression = "freq=" + (o.freq || 12) + ";amp=" + (o.amp || 25) + ";wiggle(freq,amp)"; break;
@@ -661,7 +711,7 @@ function mf_applyMotion(arg) {
                     break;
                 case "glitch":
                     var ww = addEffect(ly, "ADBE Wave Warp");
-                    if (ww) { ww.name = "MT Glitch"; setByName(ww, "Wave Type", 3); setByName(ww, "Wave Height", 0); setByName(ww, "Wave Width", 30);
+                    if (ww) { ww.name = N("glitch"); setByName(ww, "Wave Type", 3); setByName(ww, "Wave Height", 0); setByName(ww, "Wave Width", 30);
                         try { ww.property(2).expression = "seedRandom(Math.floor(time*12),true);r=random();r>.8?random(20,80):0"; } catch (gx) {} }
                     pos.expression = "seedRandom(Math.floor(time*12),true);r=random();r>.85?value+[random(-25,25),0]:value";
                     break;
@@ -677,7 +727,7 @@ function mf_applyMotion(arg) {
 function applyTransition(comp, o) {
     var fd = comp.frameDuration, d = o.dur || 0.5, t = comp.time, L = selLayers(comp, false);
     if (L.length >= 2) { L.sort(function (x, y) { return x.inPoint - y.inPoint; }); t = L[1].inPoint; }
-    var adj = comp.layers.addSolid([1, 1, 1], "MT " + o.id.replace("tr_", "Transition "), comp.width, comp.height, comp.pixelAspect, d * 2);
+    var adj = comp.layers.addSolid([1, 1, 1], N("transition") + " " + o.id.replace("tr_", ""), comp.width, comp.height, comp.pixelAspect, d * 2);
     adj.adjustmentLayer = true; adj.label = 9; adj.startTime = t - d; adj.motionBlur = true; comp.motionBlur = true;
     var a = t - d, m = t, b = t + d;
     var tx = addEffect(adj, "ADBE Geometry2");
@@ -757,7 +807,7 @@ function mf_applyCC(arg) {
     return undo("Color preset", function () {
         var o = parseArg(arg), comp = activeComp(), L = selLayers(comp, false), i, targets = L;
         if (!targets.length || o.asAdjustment) {
-            var adj = comp.layers.addSolid([1, 1, 1], "MT CC " + o.id, comp.width, comp.height, comp.pixelAspect, comp.duration);
+            var adj = comp.layers.addSolid([1, 1, 1], N("cc") + " " + o.id, comp.width, comp.height, comp.pixelAspect, comp.duration);
             adj.adjustmentLayer = true; adj.label = 2; targets = [adj];
         }
         for (i = 0; i < targets.length; i++) {
@@ -787,7 +837,7 @@ function mf_applyCC(arg) {
                     break;
                 case "lumetri": addEffect(t, "ADBE Lumetri"); break;
                 case "vignette":
-                    var v = comp.layers.addSolid([0, 0, 0], "MT Vignette", comp.width, comp.height, comp.pixelAspect, comp.duration);
+                    var v = comp.layers.addSolid([0, 0, 0], N("vignette"), comp.width, comp.height, comp.pixelAspect, comp.duration);
                     var m = v.Masks.addProperty("ADBE Mask Atom"); m.maskMode = MaskMode.SUBTRACT;
                     var sh = new Shape(), w = comp.width, hh = comp.height, k = 0.5523;
                     sh.vertices = [[w / 2, 0], [w, hh / 2], [w / 2, hh], [0, hh / 2]];
@@ -829,9 +879,9 @@ function deepGlow(layer, strength) {
     var dg = addEffect(layer, "Deep Glow") || addEffect(layer, "PEDG");
     if (dg) { setByName(dg, "Radius", 60 * strength); setByName(dg, "Exposure", 0.6 * strength); return; }
     var g1 = addEffect(layer, "ADBE Glo2");
-    if (g1) { g1.name = "MT Deep Glow Inner"; setByName(g1, "Glow Threshold", 40); setByName(g1, "Glow Radius", 12 * strength); setByName(g1, "Glow Intensity", 1.2); }
+    if (g1) { g1.name = N("glowIn"); setByName(g1, "Glow Threshold", 40); setByName(g1, "Glow Radius", 12 * strength); setByName(g1, "Glow Intensity", 1.2); }
     var g2 = addEffect(layer, "ADBE Glo2");
-    if (g2) { g2.name = "MT Deep Glow Outer"; setByName(g2, "Glow Threshold", 30); setByName(g2, "Glow Radius", 70 * strength); setByName(g2, "Glow Intensity", 0.8); }
+    if (g2) { g2.name = N("glowOut"); setByName(g2, "Glow Threshold", 30); setByName(g2, "Glow Radius", 70 * strength); setByName(g2, "Glow Intensity", 0.8); }
 }
 function styleCaption(layer, st) {
     var tp = layer.property("ADBE Text Properties").property("ADBE Text Document"), td = tp.value;
@@ -863,12 +913,12 @@ function mf_createCaptions(arg) {
         function mediaToComp(t) { return st0 + t * stretch; }
         var follow = null;
         if (o.track && o.track.points && o.track.points.length) {
-            follow = comp.layers.addNull(); follow.name = "MT Face Track"; follow.label = 11;
-            var ctl = addEffect(follow, "ADBE Point Control"); ctl.name = "Face";
-            var sz = addEffect(follow, "ADBE Slider Control"); sz.name = "Face Size";
-            var offX = addEffect(follow, "ADBE Slider Control"); offX.name = "Offset X";
-            var offY = addEffect(follow, "ADBE Slider Control"); offY.name = "Offset Y";
-            var smooth = addEffect(follow, "ADBE Slider Control"); smooth.name = "Smooth";
+            follow = comp.layers.addNull(); follow.name = N("faceTrack"); follow.label = 11;
+            var ctl = addEffect(follow, "ADBE Point Control"); ctl.name = N("face");
+            var sz = addEffect(follow, "ADBE Slider Control"); sz.name = N("faceSize");
+            var offX = addEffect(follow, "ADBE Slider Control"); offX.name = N("offX");
+            var offY = addEffect(follow, "ADBE Slider Control"); offY.name = N("offY");
+            var smooth = addEffect(follow, "ADBE Slider Control"); smooth.name = N("smooth");
             offX.property(1).setValue(o.offset ? o.offset[0] : 0);
             offY.property(1).setValue(o.offset ? o.offset[1] : 0);
             smooth.property(1).setValue(3);
@@ -882,22 +932,22 @@ function mf_createCaptions(arg) {
             sz.property(1).setValuesAtTimes(times, svals);
             follow.property("ADBE Transform Group").property("ADBE Position").expression =
                 'L=thisComp.layer("' + media.name.replace(/"/g, '\\"') + '");\n' +
-                'n=Math.max(1,Math.round(effect("Smooth")(1)));f=thisComp.frameDuration;acc=[0,0];\n' +
-                'for(i=-n;i<=n;i++){acc+=effect("Face")(1).valueAtTime(time+i*f);}\n' +
+                'n=Math.max(1,Math.round(effect("' + N("smooth") + '")(1)));f=thisComp.frameDuration;acc=[0,0];\n' +
+                'for(i=-n;i<=n;i++){acc+=effect("' + N("face") + '")(1).valueAtTime(time+i*f);}\n' +
                 'p=L.toComp(acc/(2*n+1));\n' +
-                'p+[effect("Offset X")(1), effect("Offset Y")(1)]';
+                'p+[effect("' + N("offX") + '")(1), effect("' + N("offY") + '")(1)]';
         }
         var made = 0;
         for (i = 0; i < o.segments.length; i++) {
             var sg = o.segments[i], txt = String(sg.text).replace(/^\s+|\s+$/g, "");
             if (!txt) continue;
             var t = comp.layers.addText(txt);
-            t.name = "CAP " + (i + 1) + " - " + txt.substr(0, 20);
+            t.name = N("caption") + " " + (i + 1) + " - " + txt.substr(0, 20);
             t.label = 3;
             t.inPoint = mediaToComp(sg.start); t.outPoint = Math.max(mediaToComp(sg.end), t.inPoint + comp.frameDuration * 2);
             styleCaption(t, st);
             var pos = t.property("ADBE Transform Group").property("ADBE Position");
-            if (follow) { t.parent = null; pos.expression = 'thisComp.layer("MT Face Track").toComp([0,0,0])'; }
+            if (follow) { t.parent = null; pos.expression = 'thisComp.layer("' + follow.name + '").toComp([0,0,0])'; }
             else pos.setValue([comp.width / 2, comp.height * (st.y || 0.8)]);
             if (st.anim && st.anim !== "none") {
                 var sc = t.property("ADBE Transform Group").property("ADBE Scale"), op = t.property("ADBE Transform Group").property("ADBE Opacity");
@@ -947,7 +997,7 @@ function mf_importFile(arg) {
         var io = new ImportOptions(f);
         var item = app.project.importFile(io);
         if (o.name) item.name = o.name;
-        var folder = getFolder(o.folder || "MT Imports"); item.parentFolder = folder;
+        var folder = getFolder(o.folder || N("imports")); item.parentFolder = folder;
         if (o.addToComp) {
             var comp = activeComp(), ly = comp.layers.add(item);
             ly.startTime = (o.still ? comp.time : (o.atCTI ? comp.time : 0));
@@ -1017,17 +1067,17 @@ function smartName(ly, type, idx) {
             var cont = g.property("ADBE Vectors Group");
             for (var j = 1; j <= cont.numProperties; j++) {
                 var mn = cont.property(j).matchName;
-                if (mn === "ADBE Vector Shape - Rect") { hint = "Retangulo"; break; }
-                if (mn === "ADBE Vector Shape - Ellipse") { hint = "Circulo"; break; }
-                if (mn === "ADBE Vector Shape - Star") { hint = "Estrela"; break; }
-                if (mn === "ADBE Vector Shape - Group") { hint = "Path"; }
+                if (mn === "ADBE Vector Shape - Rect") { hint = N("rect"); break; }
+                if (mn === "ADBE Vector Shape - Ellipse") { hint = N("circle"); break; }
+                if (mn === "ADBE Vector Shape - Star") { hint = N("star"); break; }
+                if (mn === "ADBE Vector Shape - Group") { hint = N("path"); }
             }
         }
-        base = hint || "Shape";
+        base = hint || N("shape");
     }
     var fx = ly.property("ADBE Effect Parade");
     if (type === "adjustment" && fx && fx.numProperties) base = fx.property(1).name;
-    if (type === "null") base = "Controle";
+    if (type === "null") base = N("control");
     if (!base) base = ly.name;
     return MF_PREFIX[type] + " | " + base;
 }
@@ -1068,7 +1118,7 @@ function mf_organize(arg) {
                     var g = groups[j];
                     if (g.type === "camera" || g.type === "light" || g.type === "null") continue;
                     var pc = comp.layers.precompose(g.idx, comp.name + " - " + MF_PREFIX[g.type], true);
-                    pc.parentFolder = getFolder("MT Precomps");
+                    pc.parentFolder = getFolder(N("precompFolder"));
                     comp.layer(g.idx[0]).label = MF_LABEL[g.type];
                     comp.layer(g.idx[0]).name = "COMP | " + MF_PREFIX[g.type];
                     report.precomps++;
@@ -1083,11 +1133,11 @@ function mf_organize(arg) {
                 var it = items[i], dest = null;
                 if (it instanceof FolderItem) continue;
                 if (it.parentFolder !== app.project.rootFolder) continue;
-                if (it instanceof CompItem) dest = "01 Comps";
-                else if (it.mainSource instanceof SolidSource) dest = "05 Solids";
-                else if (it.mainSource && it.mainSource.isStill) dest = "03 Imagens";
-                else if (it.hasVideo) dest = "02 Videos";
-                else if (it.hasAudio) dest = "04 Audio";
+                if (it instanceof CompItem) dest = N("fComps");
+                else if (it.mainSource instanceof SolidSource) dest = N("fSolids");
+                else if (it.mainSource && it.mainSource.isStill) dest = N("fImages");
+                else if (it.hasVideo) dest = N("fVideos");
+                else if (it.hasAudio) dest = N("fAudio");
                 if (dest) { it.parentFolder = getFolder(dest); report.moved++; }
             }
         }
@@ -1118,7 +1168,7 @@ function mf_compSettings(arg) {
 function mf_newComp(arg) {
     return undo("Nova comp", function () {
         var o = parseArg(arg);
-        var c = app.project.items.addComp(o.name || "MT Comp", o.w || 1080, o.h || 1920, 1, o.dur || 15, o.fps || 30);
+        var c = app.project.items.addComp(o.name || N("newComp"), o.w || 1080, o.h || 1920, 1, o.dur || 15, o.fps || 30);
         c.openInViewer();
         return ok({});
     });
@@ -1148,16 +1198,16 @@ function itemById(id) {
     for (var i = 1; i <= app.project.numItems; i++) if (app.project.item(i).id === id) return app.project.item(i);
     return null;
 }
-var MT_KIND_FOLDER = { video: "Videos", audio: "Audio", image: "Imagens", ai: "Illustrator", psd: "Photoshop", aep: "Projetos AEP" };
+var MT_KIND_FOLDER = { video: "kVideo", audio: "kAudio", image: "kImage", ai: "Illustrator", psd: "Photoshop", aep: "kAep" };
 
 /* arg: {files:[{path,kind,name,group}], title, aiAsComp, addToComp} */
 function mf_importAssets(arg) {
     return undo("Importar link", function () {
         var o = parseArg(arg), root = getFolderIn(app.project.rootFolder, "MagicTouch Import");
-        var base = getFolderIn(root, o.title || "Pacote"), i, rep = { imported: 0, failed: [], skipped: 0 };
+        var base = getFolderIn(root, o.title || N("pack")), i, rep = { imported: 0, failed: [], skipped: 0 };
         var comp = null; if (o.addToComp) { try { comp = activeComp(); } catch (e) {} }
         for (i = 0; i < o.files.length; i++) {
-            var f = o.files[i], folderName = MT_KIND_FOLDER[f.kind];
+            var f = o.files[i], folderName = MT_KIND_FOLDER[f.kind] ? N(MT_KIND_FOLDER[f.kind]) : null;
             if (!folderName) { rep.skipped++; continue; }
             try {
                 var file = new File(f.path), io = new ImportOptions(file);

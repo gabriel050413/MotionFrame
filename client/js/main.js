@@ -373,7 +373,7 @@
     return run("mf_exportFrame", { path: p }).then(function (r) { return r.path; });
   }
   function importResult(path, name) {
-    return run("mf_importFile", { path: path, addToComp: true, still: true, stillDur: 5, name: name, folder: "MT IA" }, "Importado: " + name);
+    return run("mf_importFile", { path: path, addToComp: true, still: true, stillDur: 5, name: name, folder: window.MT_T("MT IA") }, "Importado: " + name);
   }
   function removeBg(imgPromise) {
     var what = val("partPrompt").trim() || part;
@@ -381,7 +381,7 @@
     imgPromise.then(function (img) {
       if (!img) throw new Error("Cancelado");
       return job("/removebg", { image: img, part: what, invert: chk("bgInvert"), feather: num("bgFeather"), saveMask: chk("bgMask") }, "#aiBar", "#aiMsg");
-    }).then(function (r) { return importResult(r.path, "BG removido - " + what); }).catch(function (e) { toast(e.message, true); });
+    }).then(function (r) { return importResult(r.path, window.MT_T("BG removido - " + what)); }).catch(function (e) { toast(e.message, true); });
   }
   $("#btnRemoveBg").onclick = function () { removeBg(frameFile()); };
   $("#btnRemoveBgFile").onclick = function () { removeBg(H.pickFile("Imagem", ["png", "jpg", "jpeg", "webp"])); };
@@ -390,7 +390,7 @@
     imgPromise.then(function (img) {
       if (!img) throw new Error("Cancelado");
       return job("/inpaint", { image: img, target: val("inpTarget") || "pessoas", grow: num("inpGrow") }, "#aiBar", "#aiMsg");
-    }).then(function (r) { return importResult(r.path, "Sem " + val("inpTarget")); }).catch(function (e) { toast(e.message, true); });
+    }).then(function (r) { return importResult(r.path, window.MT_T("Sem " + val("inpTarget"))); }).catch(function (e) { toast(e.message, true); });
   }
   $("#btnInpaint").onclick = function () { inpaint(frameFile()); };
   $("#btnInpaintFile").onclick = function () { inpaint(H.pickFile("Imagem", ["png", "jpg", "jpeg", "webp"])); };
@@ -402,7 +402,7 @@
     job("/download", { url: url, format: val("dlFmt"), maxHeight: +val("dlH"), folder: store.get("dlFolder") }, "#dlBar", "#dlMsg").then(function (r) {
       var h = store.get("dlHist", []); h.unshift({ title: r.title, path: r.path, url: url }); store.set("dlHist", h.slice(0, 30)); histUI();
       toast("Baixado: " + r.title);
-      if (chk("dlImport")) return run("mf_importFile", { path: r.path, addToComp: true, atCTI: true, folder: "MT Downloads" }, "Importado na comp");
+      if (chk("dlImport")) return run("mf_importFile", { path: r.path, addToComp: true, atCTI: true, folder: window.MT_T("MT Downloads") }, "Importado na comp");
     }).catch(function (e) { toast(e.message, true); $("#dlMsg").textContent = e.message; });
   }
   function fmtDur(s) { if (!s) return ""; s = Math.round(s); return Math.floor(s / 60) + ":" + ("0" + s % 60).slice(-2); }
@@ -431,7 +431,7 @@
     var h = store.get("dlHist", []);
     $("#dlHistory").innerHTML = h.length ? h.map(function (x, i) { return '<div class="item" data-i="' + i + '"><span>' + esc(x.title) + '</span><button class="mini" title="Importar">＋</button></div>'; }).join("") : '<div class="muted small">Nada ainda.</div>';
     $$("#dlHistory .item").forEach(function (it) {
-      $(".mini", it).onclick = function () { run("mf_importFile", { path: h[+it.dataset.i].path, addToComp: true, atCTI: true, folder: "MT Downloads" }, "Importado"); };
+      $(".mini", it).onclick = function () { run("mf_importFile", { path: h[+it.dataset.i].path, addToComp: true, atCTI: true, folder: window.MT_T("MT Downloads") }, "Importado"); };
     });
   }
   histUI();

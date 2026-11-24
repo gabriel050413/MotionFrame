@@ -1,7 +1,7 @@
 @echo off
 REM MagicTouch - instalador Windows
-REM 1) Libera extensoes nao assinadas (PlayerDebugMode) para CSXS 9-12
-for %%v in (9 10 11 12) do reg add "HKCU\Software\Adobe\CSXS.%%v" /v PlayerDebugMode /t REG_SZ /d 1 /f >nul
+REM 1) Libera extensoes nao assinadas (PlayerDebugMode) para CSXS 9-13
+for %%v in (9 10 11 12 13) do reg add "HKCU\Software\Adobe\CSXS.%%v" /v PlayerDebugMode /t REG_SZ /d 1 /f >nul
 REM 2) Copia a extensao
 set DEST=%APPDATA%\Adobe\CEP\extensions\MagicTouch
 if exist "%DEST%" rmdir /s /q "%DEST%"

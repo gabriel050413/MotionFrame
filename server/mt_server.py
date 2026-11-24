@@ -64,6 +64,10 @@ def new_job(fn, payload):
             res = fn(payload, progress)
             with JOBS_LOCK:
                 JOBS[jid].update(status="done", progress=100, result=res, message="Concluído")
+        except ModuleNotFoundError as e:
+            msg = f"Dependência ausente: {e.name} — rode: pip install -r server/requirements.txt"
+            with JOBS_LOCK:
+                JOBS[jid].update(status="error", error=msg, message=msg)
         except Exception as e:  # noqa
             traceback.print_exc()
             with JOBS_LOCK:
@@ -694,6 +698,8 @@ class Handler(BaseHTTPRequestHandler):
             if self.path == "/search":
                 return self._send(200, do_search(payload))
             self._send(404, {"error": "rota desconhecida"})
+        except ModuleNotFoundError as e:
+            self._send(500, {"error": f"Dependência ausente: {e.name} — rode: pip install -r server/requirements.txt"})
         except Exception as e:  # noqa
             traceback.print_exc()
             self._send(500, {"error": str(e)})
