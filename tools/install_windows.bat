@@ -11,10 +11,17 @@ xcopy /e /i /y "%~dp0..\client" "%DEST%\client" >nul
 xcopy /e /i /y "%~dp0..\jsx" "%DEST%\jsx" >nul
 xcopy /e /i /y "%~dp0..\server" "%DEST%\server" >nul
 REM 3) Dependencias de IA (opcional)
-where python >nul 2>nul && (
-  echo Instalando dependencias Python (pode demorar)...
-  python -m pip install -r "%DEST%\server\requirements.txt"
-) || echo Python nao encontrado - instale Python 3.10+ para usar as funcoes de IA.
+set PY=
+where py >nul 2>nul && set PY=py
+if not defined PY where python >nul 2>nul && set PY=python
+if defined PY (
+  echo Instalando dependencias Python - pode demorar varios minutos...
+  %PY% -m pip install --upgrade pip
+  %PY% -m pip install --prefer-binary -r "%DEST%\server\requirements.txt"
+  %PY% -m pip install --prefer-binary -r "%DEST%\server\requirements-extra.txt"
+) else (
+  echo Python nao encontrado - instale o Python 3.12 em python.org para usar as funcoes de IA.
+)
 echo.
 echo Pronto! Abra o After Effects: Window ^> Extensions ^> MagicTouch
 pause

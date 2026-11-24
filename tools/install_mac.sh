@@ -8,7 +8,8 @@ rm -rf "$DEST"; mkdir -p "$DEST"
 cp -R "$SRC/CSXS" "$SRC/client" "$SRC/jsx" "$SRC/server" "$DEST/"
 if command -v python3 >/dev/null; then
   echo "Instalando dependências Python (pode demorar)..."
-  python3 -m pip install --user -r "$DEST/server/requirements.txt" || echo "Falhou — instale manualmente."
+  python3 -m pip install --user --prefer-binary -r "$DEST/server/requirements.txt" || echo "Falhou — veja docs/INSTALACAO.md"
+  python3 -m pip install --user --prefer-binary -r "$DEST/server/requirements-extra.txt" || true
 else
   echo "Python 3 não encontrado — instale para usar as funções de IA."
 fi

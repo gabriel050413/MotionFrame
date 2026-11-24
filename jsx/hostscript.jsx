@@ -1,11 +1,11 @@
-/*  MagicTouch — ExtendScript host (After Effects)
- *  Todas as funções públicas começam com mf_ e devolvem uma string JSON:
+/*  MagicTouch \u2014 ExtendScript host (After Effects)
+ *  Todas as fun\u00e7\u00f5es p\u00fablicas come\u00e7am com mf_ e devolvem uma string JSON:
  *  {"ok":true, ...}  ou  {"ok":false,"error":"..."}
  *  ExtendScript = ES3: nada de let/const/arrow functions.
  */
 
 /* ------------------------------------------------------------------ */
-/* JSON mínimo (ExtendScript antigo não tem JSON nativo)               */
+/* JSON m\u00ednimo (ExtendScript antigo n\u00e3o tem JSON nativo)               */
 /* ------------------------------------------------------------------ */
 if (typeof JSON !== "object") { JSON = {}; }
 (function () {
@@ -45,7 +45,7 @@ function fail(e) { return JSON.stringify({ ok: false, error: String(e && e.messa
 
 function activeComp() {
     var c = app.project.activeItem;
-    if (!c || !(c instanceof CompItem)) throw new Error("Abra/selecione uma composição.");
+    if (!c || !(c instanceof CompItem)) throw new Error("Abra/selecione uma composi\u00e7\u00e3o.");
     return c;
 }
 function selLayers(comp, required) {
@@ -64,7 +64,7 @@ function parseArg(s) { return (typeof s === "string" && s.length) ? JSON.parse(s
 function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
 function isArr(v) { return v instanceof Array; }
 
-/* percorre todas as propriedades animáveis de um grupo */
+/* percorre todas as propriedades anim\u00e1veis de um grupo */
 function walkProps(group, cb) {
     var i, p;
     for (i = 1; i <= group.numProperties; i++) {
@@ -88,50 +88,50 @@ var MT_LANG = "pt";
 var MT_LI = { pt: 0, en: 1, es: 2, fr: 3 };
 var MT_NAMES = {
     "null": ["MT Null", "MT Null", "MT Null", "MT Null"],
-    adjustment: ["MT Ajuste", "MT Adjustment", "MT Ajuste", "MT Réglage"],
-    solid: ["MT Sólido", "MT Solid", "MT Sólido", "MT Solide"],
-    camera: ["MT Câmera", "MT Camera", "MT Cámara", "MT Caméra"],
+    adjustment: ["MT Ajuste", "MT Adjustment", "MT Ajuste", "MT R\u00e9glage"],
+    solid: ["MT S\u00f3lido", "MT Solid", "MT S\u00f3lido", "MT Solide"],
+    camera: ["MT C\u00e2mera", "MT Camera", "MT C\u00e1mara", "MT Cam\u00e9ra"],
     text: ["TEXTO", "TEXT", "TEXTO", "TEXTE"],
-    precomp: ["MT Pré-comp", "MT Precomp", "MT Precomp", "MT Précomp"],
-    blurIn: ["MT Desfoque de entrada", "MT Blur In", "MT Desenfoque de entrada", "MT Flou d'entrée"],
+    precomp: ["MT Pr\u00e9-comp", "MT Precomp", "MT Precomp", "MT Pr\u00e9comp"],
+    blurIn: ["MT Desfoque de entrada", "MT Blur In", "MT Desenfoque de entrada", "MT Flou d'entr\u00e9e"],
     glitch: ["MT Glitch", "MT Glitch", "MT Glitch", "MT Glitch"],
-    glowIn: ["MT Deep Glow Interno", "MT Deep Glow Inner", "MT Deep Glow Interno", "MT Deep Glow Intérieur"],
-    glowOut: ["MT Deep Glow Externo", "MT Deep Glow Outer", "MT Deep Glow Externo", "MT Deep Glow Extérieur"],
-    transition: ["MT Transição", "MT Transition", "MT Transición", "MT Transition"],
+    glowIn: ["MT Deep Glow Interno", "MT Deep Glow Inner", "MT Deep Glow Interno", "MT Deep Glow Int\u00e9rieur"],
+    glowOut: ["MT Deep Glow Externo", "MT Deep Glow Outer", "MT Deep Glow Externo", "MT Deep Glow Ext\u00e9rieur"],
+    transition: ["MT Transi\u00e7\u00e3o", "MT Transition", "MT Transici\u00f3n", "MT Transition"],
     cc: ["MT Cor", "MT Color", "MT Color", "MT Couleur"],
-    vignette: ["MT Vinheta", "MT Vignette", "MT Viñeta", "MT Vignette"],
+    vignette: ["MT Vinheta", "MT Vignette", "MT Vi\u00f1eta", "MT Vignette"],
     faceTrack: ["MT Rastreio Facial", "MT Face Track", "MT Seguimiento Facial", "MT Suivi du Visage"],
     face: ["Rosto", "Face", "Rostro", "Visage"],
-    faceSize: ["Tamanho do rosto", "Face Size", "Tamaño del rostro", "Taille du visage"],
-    offX: ["Deslocamento X", "Offset X", "Desplazamiento X", "Décalage X"],
-    offY: ["Deslocamento Y", "Offset Y", "Desplazamiento Y", "Décalage Y"],
+    faceSize: ["Tamanho do rosto", "Face Size", "Tama\u00f1o del rostro", "Taille du visage"],
+    offX: ["Deslocamento X", "Offset X", "Desplazamiento X", "D\u00e9calage X"],
+    offY: ["Deslocamento Y", "Offset Y", "Desplazamiento Y", "D\u00e9calage Y"],
     smooth: ["Suavizar", "Smooth", "Suavizado", "Lissage"],
     caption: ["LEG", "CAP", "SUB", "ST"],
-    precompFolder: ["MT Pré-comps", "MT Precomps", "MT Precomps", "MT Précomps"],
+    precompFolder: ["MT Pr\u00e9-comps", "MT Precomps", "MT Precomps", "MT Pr\u00e9comps"],
     fComps: ["01 Comps", "01 Comps", "01 Comps", "01 Compositions"],
-    fVideos: ["02 Vídeos", "02 Videos", "02 Videos", "02 Vidéos"],
-    fImages: ["03 Imagens", "03 Images", "03 Imágenes", "03 Images"],
-    fAudio: ["04 Áudio", "04 Audio", "04 Audio", "04 Audio"],
-    fSolids: ["05 Sólidos", "05 Solids", "05 Sólidos", "05 Solides"],
-    kVideo: ["Vídeos", "Videos", "Videos", "Vidéos"],
-    kAudio: ["Áudio", "Audio", "Audio", "Audio"],
-    kImage: ["Imagens", "Images", "Imágenes", "Images"],
+    fVideos: ["02 V\u00eddeos", "02 Videos", "02 Videos", "02 Vid\u00e9os"],
+    fImages: ["03 Imagens", "03 Images", "03 Im\u00e1genes", "03 Images"],
+    fAudio: ["04 \u00c1udio", "04 Audio", "04 Audio", "04 Audio"],
+    fSolids: ["05 S\u00f3lidos", "05 Solids", "05 S\u00f3lidos", "05 Solides"],
+    kVideo: ["V\u00eddeos", "Videos", "Videos", "Vid\u00e9os"],
+    kAudio: ["\u00c1udio", "Audio", "Audio", "Audio"],
+    kImage: ["Imagens", "Images", "Im\u00e1genes", "Images"],
     kAep: ["Projetos AEP", "AEP Projects", "Proyectos AEP", "Projets AEP"],
-    imports: ["MT Importações", "MT Imports", "MT Importaciones", "MT Imports"],
+    imports: ["MT Importa\u00e7\u00f5es", "MT Imports", "MT Importaciones", "MT Imports"],
     pack: ["Pacote", "Package", "Paquete", "Archive"],
     newComp: ["MT Comp", "MT Comp", "MT Comp", "MT Comp"],
-    rect: ["Retângulo", "Rectangle", "Rectángulo", "Rectangle"],
-    circle: ["Círculo", "Circle", "Círculo", "Cercle"],
-    star: ["Estrela", "Star", "Estrella", "Étoile"],
-    path: ["Caminho", "Path", "Trazado", "Tracé"],
+    rect: ["Ret\u00e2ngulo", "Rectangle", "Rect\u00e1ngulo", "Rectangle"],
+    circle: ["C\u00edrculo", "Circle", "C\u00edrculo", "Cercle"],
+    star: ["Estrela", "Star", "Estrella", "\u00c9toile"],
+    path: ["Caminho", "Path", "Trazado", "Trac\u00e9"],
     shape: ["Forma", "Shape", "Forma", "Forme"],
-    control: ["Controle", "Control", "Control", "Contrôle"]
+    control: ["Controle", "Control", "Control", "Contr\u00f4le"]
 };
 function N(k) { var r = MT_NAMES[k]; return r ? r[MT_LI[MT_LANG] || 0] : k; }
 function mf_setLang(arg) { var o = parseArg(arg); if (MT_LI[o.lang] !== undefined) MT_LANG = o.lang; return ok({ lang: MT_LANG }); }
 
 /* ------------------------------------------------------------------ */
-/* Keyframes: captura e recriação                                       */
+/* Keyframes: captura e recria\u00e7\u00e3o                                       */
 /* ------------------------------------------------------------------ */
 function captureKeys(p) {
     var keys = [], k, n = p.numKeys, d;
@@ -190,9 +190,9 @@ function targetProps(layer, onlySelected) {
 /*  Encaixa keyframes no tamanho do clip (proporcional).
  *  opts: { mode:"stretch"|"intro_outro"|"percent", padStart, padEnd (s),
  *          percent (0-100), onlySelected }
- *  - stretch: 1º key -> inPoint, último -> outPoint (tudo escalado proporcionalmente)
- *  - intro_outro: keys da 1ª metade escalam para o começo, 2ª metade ancora no fim
- *  - percent: animação ocupa X% do clip a partir do início
+ *  - stretch: 1\u00ba key -> inPoint, \u00faltimo -> outPoint (tudo escalado proporcionalmente)
+ *  - intro_outro: keys da 1\u00aa metade escalam para o come\u00e7o, 2\u00aa metade ancora no fim
+ *  - percent: anima\u00e7\u00e3o ocupa X% do clip a partir do in\u00edcio
  */
 function fitPropToRange(p, t0, t1, opts) {
     var keys = captureKeys(p), a = keys[0].t, b = keys[keys.length - 1].t, span = b - a;
@@ -240,7 +240,7 @@ function mf_applyPresetProportional(arg) {
     return undo("Preset proporcional", function () {
         var o = parseArg(arg), comp = activeComp(), L = selLayers(comp, true), i, n = 0;
         var f = new File(o.path);
-        if (!f.exists) throw new Error("Preset não encontrado: " + o.path);
+        if (!f.exists) throw new Error("Preset n\u00e3o encontrado: " + o.path);
         var keepTime = comp.time;
         for (i = 0; i < L.length; i++) {
             var before = keySnapshot(L[i]);
@@ -266,7 +266,7 @@ function mf_applyPresetProportional(arg) {
 }
 
 /* ------------------------------------------------------------------ */
-/* FLOW — curva bezier -> temporal ease do AE                          */
+/* FLOW \u2014 curva bezier -> temporal ease do AE                          */
 /* ------------------------------------------------------------------ */
 function selectedKeyPairs(p) {
     var ks = p.selectedKeys, pairs = [], i;
@@ -308,7 +308,7 @@ function applyCurveToPair(p, k1, k2, x1, y1, x2, y2) {
     p.setTemporalEaseAtKey(k2, inE, p.keyOutTemporalEase(k2));
 }
 
-/* arg: {x1,y1,x2,y2}  — mesma notação do cubic-bezier CSS */
+/* arg: {x1,y1,x2,y2}  \u2014 mesma nota\u00e7\u00e3o do cubic-bezier CSS */
 function mf_applyFlow(arg) {
     return undo("Flow", function () {
         var o = parseArg(arg), comp = activeComp(), L = selLayers(comp, true), i, j, k, n = 0;
@@ -326,7 +326,7 @@ function mf_applyFlow(arg) {
     });
 }
 
-/* lê a curva do primeiro par selecionado (para mostrar no gráfico) */
+/* l\u00ea a curva do primeiro par selecionado (para mostrar no gr\u00e1fico) */
 function mf_readFlow() {
     try {
         var comp = activeComp(), L = selLayers(comp, true), props = targetProps(L[0], false);
@@ -450,7 +450,7 @@ function mf_setAnchor(arg) {
             var newA = [r.left + r.width * o.x, r.top + r.height * o.y];
             var oldA = ap.value;
             if (oldA.length > 2) newA.push(oldA[2]);
-            // compensação manual (escala + rotação) para a layer não sair do lugar
+            // compensa\u00e7\u00e3o manual (escala + rota\u00e7\u00e3o) para a layer n\u00e3o sair do lugar
             var sc = tr.property("ADBE Scale").value, rot = tr.property("ADBE Rotate Z").value * Math.PI / 180;
             var dx = (newA[0] - oldA[0]) * sc[0] / 100, dy = (newA[1] - oldA[1]) * sc[1] / 100;
             var rx = dx * Math.cos(rot) - dy * Math.sin(rot), ry = dx * Math.sin(rot) + dy * Math.cos(rot);
@@ -506,7 +506,7 @@ function mf_fitToComp(arg) {
 }
 
 /* ------------------------------------------------------------------ */
-/* EXPRESSÕES                                                           */
+/* EXPRESS\u00d5ES                                                           */
 /* ------------------------------------------------------------------ */
 function mf_getExpressions() {
     try {
@@ -525,7 +525,7 @@ function mf_getExpressions() {
         return ok({ items: out });
     } catch (e) { return fail(e); }
 }
-/* nomes amigáveis -> matchName */
+/* nomes amig\u00e1veis -> matchName */
 var MF_PROPMAP = {
     "position": "ADBE Position", "scale": "ADBE Scale", "rotation": "ADBE Rotate Z", "opacity": "ADBE Opacity",
     "anchor": "ADBE Anchor Point", "sourceText": "ADBE Text Document", "timeRemap": "ADBE Time Remapping"
@@ -535,9 +535,9 @@ function findProp(layer, matchName) {
     walkProps(layer, function (p) { if (!found && (p.matchName === matchName)) found = p; });
     return found;
 }
-/* arg: {expr, target?: "position"|matchName} — aplica nas props selecionadas ou no alvo */
+/* arg: {expr, target?: "position"|matchName} \u2014 aplica nas props selecionadas ou no alvo */
 function mf_applyExpression(arg) {
-    return undo("Expressão", function () {
+    return undo("Express\u00e3o", function () {
         var o = parseArg(arg), comp = activeComp(), L = selLayers(comp, true), i, j, n = 0;
         for (i = 0; i < L.length; i++) {
             var sp = L[i].selectedProperties, done = false;
@@ -556,7 +556,7 @@ function mf_applyExpression(arg) {
     });
 }
 function mf_clearExpressions() {
-    return undo("Limpar expressões", function () {
+    return undo("Limpar express\u00f5es", function () {
         var comp = activeComp(), L = selLayers(comp, true), i, n = 0;
         for (i = 0; i < L.length; i++) walkProps(L[i], function (p) { if (p.canSetExpression && p.expression) { p.expression = ""; n++; } });
         return ok({ count: n });
@@ -564,7 +564,7 @@ function mf_clearExpressions() {
 }
 
 /* ------------------------------------------------------------------ */
-/* EFEITOS / EFEITO PRÓPRIO (stack de efeitos salvo em JSON)           */
+/* EFEITOS / EFEITO PR\u00d3PRIO (stack de efeitos salvo em JSON)           */
 /* ------------------------------------------------------------------ */
 function addEffect(layer, name) {
     var fx = layer.property("ADBE Effect Parade");
@@ -575,7 +575,7 @@ function mf_addEffect(arg) {
     return undo("Efeito", function () {
         var o = parseArg(arg), comp = activeComp(), L = selLayers(comp, true), i, n = 0;
         for (i = 0; i < L.length; i++) if (addEffect(L[i], o.name)) n++;
-        if (!n) throw new Error("Efeito não disponível: " + o.name);
+        if (!n) throw new Error("Efeito n\u00e3o dispon\u00edvel: " + o.name);
         return ok({});
     });
 }
@@ -625,12 +625,12 @@ function mf_captureEffects() {
             if (onlySel && !e.selected) continue;
             list.push({ mn: e.matchName, name: e.name, props: captureGroup(e) });
         }
-        if (!list.length) throw new Error("A layer selecionada não tem efeitos.");
+        if (!list.length) throw new Error("A layer selecionada n\u00e3o tem efeitos.");
         return ok({ effects: list });
     } catch (e) { return fail(e); }
 }
 function mf_applyEffectStack(arg) {
-    return undo("Efeito próprio", function () {
+    return undo("Efeito pr\u00f3prio", function () {
         var o = parseArg(arg), comp = activeComp(), L = selLayers(comp, true), i, j;
         for (i = 0; i < L.length; i++) {
             for (j = 0; j < o.effects.length; j++) {
@@ -656,7 +656,7 @@ function mf_removeEffects() {
 }
 
 /* ------------------------------------------------------------------ */
-/* MOTION LIBRARY (presets procedurais estilo "pack de animações")     */
+/* MOTION LIBRARY (presets procedurais estilo "pack de anima\u00e7\u00f5es")     */
 /* ------------------------------------------------------------------ */
 function tProp(l, mn) { return l.property("ADBE Transform Group").property(mn); }
 function easeAll(p) {
@@ -723,7 +723,7 @@ function mf_applyMotion(arg) {
     });
 }
 
-/* transições: cria adjustment layer no CTI (ou entre 2 clips selecionados) */
+/* transi\u00e7\u00f5es: cria adjustment layer no CTI (ou entre 2 clips selecionados) */
 function applyTransition(comp, o) {
     var fd = comp.frameDuration, d = o.dur || 0.5, t = comp.time, L = selLayers(comp, false);
     if (L.length >= 2) { L.sort(function (x, y) { return x.inPoint - y.inPoint; }); t = L[1].inPoint; }
@@ -733,7 +733,7 @@ function applyTransition(comp, o) {
     var tx = addEffect(adj, "ADBE Geometry2");
     tx.property("ADBE Geometry2-0011").setValue(false); // Use comp shutter angle off
     try { tx.property("ADBE Geometry2-0012").setValue(360); } catch (e0) {}
-    var mir = addEffect(adj, "ADBE Tile"); // Motion Tile para não mostrar bordas
+    var mir = addEffect(adj, "ADBE Tile"); // Motion Tile para n\u00e3o mostrar bordas
     try { mir.property("ADBE Tile-0004").setValue(300); mir.property("ADBE Tile-0005").setValue(300); mir.property("ADBE Tile-0006").setValue(true); } catch (e1) {}
     var C = [comp.width / 2, comp.height / 2];
     var posP = tx.property("ADBE Geometry2-0002"), scP = tx.property("ADBE Geometry2-0003"), rotP = tx.property("ADBE Geometry2-0007");
@@ -781,7 +781,7 @@ function mf_speedRamp(arg) {
             var src = tr.valueAtTime(t, false);
             while (tr.numKeys) tr.removeKey(1);
             var startSrc = tr.valueAtTime(ly.inPoint, false);
-            // velocidade normal até t-half, lenta entre t-half e t+half, normal depois
+            // velocidade normal at\u00e9 t-half, lenta entre t-half e t+half, normal depois
             var s0 = src - half; tr.setValueAtTime(ly.inPoint, src - (t - ly.inPoint));
             tr.setValueAtTime(t - half, s0);
             var slowSpan = half * 2 * slow;
@@ -855,15 +855,15 @@ function mf_applyCC(arg) {
 }
 
 /* ------------------------------------------------------------------ */
-/* LEGENDAS AUTOMÁTICAS + FACE TRACKING                                 */
+/* LEGENDAS AUTOM\u00c1TICAS + FACE TRACKING                                 */
 /* ------------------------------------------------------------------ */
-/* informações da layer de vídeo selecionada (para o servidor de IA) */
+/* informa\u00e7\u00f5es da layer de v\u00eddeo selecionada (para o servidor de IA) */
 function mf_getSelectedMedia() {
     try {
         var comp = activeComp(), L = selLayers(comp, false), ly = null, i;
         for (i = 0; i < L.length; i++) if (L[i].source && L[i].source.file) { ly = L[i]; break; }
         if (!ly) for (i = 1; i <= comp.numLayers; i++) { var c = comp.layer(i); if (c.source && c.source.file && c.hasVideo) { ly = c; break; } }
-        if (!ly) throw new Error("Nenhuma layer de vídeo/áudio com arquivo encontrada.");
+        if (!ly) throw new Error("Nenhuma layer de v\u00eddeo/\u00e1udio com arquivo encontrada.");
         return ok({
             path: ly.source.file.fsName, layer: ly.name, index: ly.index,
             startTime: ly.startTime, inPoint: ly.inPoint, outPoint: ly.outPoint, stretch: ly.stretch,
@@ -875,7 +875,7 @@ function mf_getSelectedMedia() {
 
 function deepGlow(layer, strength) {
     strength = strength || 1;
-    // Usa o plugin Deep Glow (Plugin Everything) se estiver instalado; senão simula com 2 Glows + Gaussian.
+    // Usa o plugin Deep Glow (Plugin Everything) se estiver instalado; sen\u00e3o simula com 2 Glows + Gaussian.
     var dg = addEffect(layer, "Deep Glow") || addEffect(layer, "PEDG");
     if (dg) { setByName(dg, "Radius", 60 * strength); setByName(dg, "Exposure", 0.6 * strength); return; }
     var g1 = addEffect(layer, "ADBE Glo2");
@@ -900,14 +900,14 @@ function styleCaption(layer, st) {
     }
 }
 /*  arg: {
- *    segments:[{start,end,text}] (tempo da mídia em s),
+ *    segments:[{start,end,text}] (tempo da m\u00eddia em s),
  *    media:{index,startTime,stretch, width,height},
  *    style:{font,size,color,stroke,upper,glow,shadow,anim},
- *    track:{fps, points:[{t,x,y,s}]  (x,y normalizados 0-1 no frame da mídia, s = tamanho do rosto)},
- *    offset:[dx,dy]  (deslocamento da legenda em relação à cabeça, px)
+ *    track:{fps, points:[{t,x,y,s}]  (x,y normalizados 0-1 no frame da m\u00eddia, s = tamanho do rosto)},
+ *    offset:[dx,dy]  (deslocamento da legenda em rela\u00e7\u00e3o \u00e0 cabe\u00e7a, px)
  *  } */
 function mf_createCaptions(arg) {
-    return undo("Legendas automáticas", function () {
+    return undo("Legendas autom\u00e1ticas", function () {
         var o = parseArg(arg), comp = activeComp(), st = o.style || {}, i;
         var media = comp.layer(o.media.index), stretch = (o.media.stretch || 100) / 100, st0 = o.media.startTime || 0;
         function mediaToComp(t) { return st0 + t * stretch; }
@@ -993,7 +993,7 @@ function mf_exportFrame(arg) {
 function mf_importFile(arg) {
     return undo("Importar", function () {
         var o = parseArg(arg), f = new File(o.path);
-        if (!f.exists) throw new Error("Arquivo não existe: " + o.path);
+        if (!f.exists) throw new Error("Arquivo n\u00e3o existe: " + o.path);
         var io = new ImportOptions(f);
         var item = app.project.importFile(io);
         if (o.name) item.name = o.name;
@@ -1036,8 +1036,8 @@ function mf_render(arg) {
 /* ------------------------------------------------------------------ */
 /* ORGANIZADOR DE PROJETO                                               */
 /* ------------------------------------------------------------------ */
-var MF_LABEL = { text: 3, shape: 8, camera: 13, light: 6, null: 1, adjustment: 5, solid: 15, audio: 10, precomp: 12, video: 9, image: 4, sequence: 14, unknown: 0 };
-var MF_PREFIX = { text: "TXT", shape: "SHP", camera: "CAM", light: "LIGHT", null: "CTRL", adjustment: "ADJ", solid: "SOLID", audio: "AUDIO", precomp: "COMP", video: "VIDEO", image: "IMG", sequence: "SEQ", unknown: "LAYER" };
+var MF_LABEL = { text: 3, shape: 8, camera: 13, light: 6, "null": 1, adjustment: 5, solid: 15, audio: 10, precomp: 12, video: 9, image: 4, sequence: 14, unknown: 0 };
+var MF_PREFIX = { text: "TXT", shape: "SHP", camera: "CAM", light: "LIGHT", "null": "CTRL", adjustment: "ADJ", solid: "SOLID", audio: "AUDIO", precomp: "COMP", video: "VIDEO", image: "IMG", sequence: "SEQ", unknown: "LAYER" };
 function classify(ly) {
     if (ly instanceof TextLayer) return "text";
     if (ly instanceof ShapeLayer) return "shape";
@@ -1112,7 +1112,7 @@ function mf_organize(arg) {
                     for (j = 1; j <= comp.numLayers; j++) { if (!byT[types[j - 1]]) byT[types[j - 1]] = []; byT[types[j - 1]].push(j); }
                     for (var k in byT) if (byT.hasOwnProperty(k) && byT[k].length >= 2) groups.push({ type: k, idx: byT[k] });
                 }
-                // de baixo para cima para não bagunçar índices
+                // de baixo para cima para n\u00e3o bagun\u00e7ar \u00edndices
                 groups.sort(function (a, b) { return b.idx[0] - a.idx[0]; });
                 for (j = 0; j < groups.length; j++) {
                     var g = groups[j];
@@ -1151,7 +1151,7 @@ function range(a, b) { var r = [], i; for (i = a; i <= b; i++) r.push(i); return
 /* ------------------------------------------------------------------ */
 function mf_info() {
     try {
-        var c = app.project.activeItem, info = { version: app.version, project: app.project.file ? app.project.file.name : "(não salvo)" };
+        var c = app.project.activeItem, info = { version: app.version, project: app.project.file ? app.project.file.name : "(n\u00e3o salvo)" };
         if (c && c instanceof CompItem) { info.comp = c.name; info.w = c.width; info.h = c.height; info.fps = c.frameRate; info.dur = c.duration; info.sel = c.selectedLayers.length; }
         return ok(info);
     } catch (e) { return fail(e); }
@@ -1186,7 +1186,7 @@ function mf_compFromSelection() {
 }
 
 /* ================================================================== */
-/* MAGICTOUCH — Leitor de links / importação automática                */
+/* MAGICTOUCH \u2014 Leitor de links / importa\u00e7\u00e3o autom\u00e1tica                */
 /* ================================================================== */
 function getFolderIn(parent, name) {
     var i, it;
@@ -1230,7 +1230,7 @@ function mf_importAssets(arg) {
 }
 
 /* ================================================================== */
-/* MAGICTOUCH — Criador automático de projeto de presets (.ffx)        */
+/* MAGICTOUCH \u2014 Criador autom\u00e1tico de projeto de presets (.ffx)        */
 /* ================================================================== */
 var MT_ADJ_HINT = /(transi|shake|zoom|glitch|color|cor|cc|lut|grade|blur|distort|warp|flash|light|leak|rgb|vhs|film|camera|cam |overlay|fx)/i;
 
@@ -1256,7 +1256,7 @@ function mf_buildPresetProject(arg) {
         var i, made = 0, failed = [], first = null;
         for (i = 0; i < o.presets.length; i++) {
             var ps = o.presets[i], f = new File(ps.path);
-            if (!f.exists) { failed.push(ps.name + ": arquivo não existe"); continue; }
+            if (!f.exists) { failed.push(ps.name + ": arquivo n\u00e3o existe"); continue; }
             var folder = base;
             if (ps.group) { var parts = String(ps.group).split("/"); for (var q = 0; q < parts.length && q < 3; q++) if (parts[q]) folder = getFolderIn(folder, parts[q]); }
             var comp = app.project.items.addComp(ps.name, w, h, 1, dur, fps);
@@ -1284,7 +1284,7 @@ function mf_buildPresetProject(arg) {
                 target.selected = true;
                 var before = layerFingerprint(target);
                 target.applyPreset(f);
-                // modo auto: se aplicar na layer de texto não mudou nada, tenta numa adjustment
+                // modo auto: se aplicar na layer de texto n\u00e3o mudou nada, tenta numa adjustment
                 if (mode === "auto" && target === txt && layerFingerprint(txt) === before) {
                     var adj = comp.layers.addSolid([1, 1, 1], "FX | " + ps.name, w, h, 1, dur); adj.adjustmentLayer = true; adj.label = 5;
                     adj.selected = true; adj.applyPreset(f); target = adj;
@@ -1314,7 +1314,7 @@ function mf_listPresetComps() {
     } catch (e) { return fail(e); }
 }
 function safeName(s) { return String(s).replace(/[\\\/:*?"<>|]/g, "_"); }
-/* arg: {dest, keepFolders:true} — salva todos os .ffx do projeto (com o nome atual da comp) */
+/* arg: {dest, keepFolders:true} \u2014 salva todos os .ffx do projeto (com o nome atual da comp) */
 function mf_exportPresets(arg) {
     try {
         var o = parseArg(arg), list = JSON.parse(mf_listPresetComps()).items, i, n = 0, miss = [];
@@ -1329,13 +1329,13 @@ function mf_exportPresets(arg) {
         return ok({ count: n, missing: miss });
     } catch (e) { return fail(e); }
 }
-/* abre o diálogo nativo "Save Animation Preset" para a layer/props selecionadas (presets modificados) */
+/* abre o di\u00e1logo nativo "Save Animation Preset" para a layer/props selecionadas (presets modificados) */
 function mf_saveAnimationPreset() {
     try { app.executeCommand(app.findMenuCommandId("Save Animation Preset...")); return ok({}); } catch (e) { return fail(e); }
 }
 
 /* ================================================================== */
-/* MAGICTOUCH — Mídias não encontradas                                 */
+/* MAGICTOUCH \u2014 M\u00eddias n\u00e3o encontradas                                 */
 /* ================================================================== */
 function mf_missingFootage() {
     try {
@@ -1353,7 +1353,7 @@ function mf_missingFootage() {
 }
 /* arg: {items:[{id, path, seq}]} */
 function mf_replaceFootage(arg) {
-    return undo("Substituir mídias", function () {
+    return undo("Substituir m\u00eddias", function () {
         var o = parseArg(arg), i, n = 0, errs = [];
         for (i = 0; i < o.items.length; i++) {
             var it = itemById(o.items[i].id), f = new File(o.items[i].path);
@@ -1379,7 +1379,7 @@ function mf_placeholderFootage(arg) {
 }
 
 /* ================================================================== */
-/* MAGICTOUCH — Projeto (salvar incremental, reduzir, limpar cache)    */
+/* MAGICTOUCH \u2014 Projeto (salvar incremental, reduzir, limpar cache)    */
 /* ================================================================== */
 function mf_projectTool(arg) {
     return undo("Projeto", function () {

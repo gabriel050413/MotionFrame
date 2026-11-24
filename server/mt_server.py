@@ -325,6 +325,30 @@ def job_removebg(o, progress):
     return {"path": dst}
 
 
+def _lama_onnx(img, mask):
+    """Inpainting LaMa em ONNX (roda com o onnxruntime que já vem com o rembg).
+    Processa em 512x512 e cola só a área mascarada de volta na imagem original (mantém a resolução)."""
+    import numpy as np
+    import onnxruntime as ort
+    from huggingface_hub import hf_hub_download
+    from PIL import Image, ImageFilter
+
+    if "lama" not in _CACHE:
+        path = hf_hub_download("Carve/LaMa-ONNX", "lama_fp32.onnx")
+        _CACHE["lama"] = ort.InferenceSession(path, providers=["CPUExecutionProvider"])
+    sess = _CACHE["lama"]
+    W, H = img.size
+    im = np.asarray(img.convert("RGB").resize((512, 512), Image.BICUBIC), dtype=np.float32) / 255.0
+    mk = (np.asarray(mask.convert("L").resize((512, 512), Image.NEAREST), dtype=np.float32) > 127).astype(np.float32)
+    out = sess.run(None, {"image": im.transpose(2, 0, 1)[None], "mask": mk[None, None]})[0][0]
+    if out.max() <= 1.5:
+        out = out * 255.0
+    out = np.clip(out.transpose(1, 2, 0), 0, 255).astype(np.uint8)
+    filled = Image.fromarray(out).resize((W, H), Image.BICUBIC)
+    soft = mask.convert("L").filter(ImageFilter.GaussianBlur(2))
+    return Image.composite(filled, img.convert("RGB"), soft)
+
+
 def job_inpaint(o, progress):
     import numpy as np
     from PIL import Image, ImageFilter
@@ -343,12 +367,9 @@ def job_inpaint(o, progress):
     progress(40, "Preenchendo com IA...")
     result = None
     try:
-        from simple_lama_inpainting import SimpleLama  # pip install simple-lama-inpainting
-
-        if "lama" not in _CACHE:
-            _CACHE["lama"] = SimpleLama()
-        result = _CACHE["lama"](img, mask)
-    except Exception:
+        result = _lama_onnx(img, mask)
+    except Exception as e:  # noqa
+        print("[mt] LaMa indisponível, usando OpenCV:", e, file=sys.stderr)
         import cv2
 
         arr = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
@@ -678,7 +699,7 @@ class Handler(BaseHTTPRequestHandler):
                 "features": {
                     "transcribe": has("faster_whisper"), "facetrack": has("cv2"), "mediapipe": has("mediapipe"),
                     "removebg": has("rembg"), "clipseg": has("transformers") and has("torch"),
-                    "lama": has("simple_lama_inpainting"), "download": has("yt_dlp"),
+                    "lama": has("onnxruntime") and has("huggingface_hub"), "download": has("yt_dlp"),
                     "drive": has("gdown"), "rar": has("rarfile"), "7z": has("py7zr"),
                 }})
         if self.path.startswith("/job/"):

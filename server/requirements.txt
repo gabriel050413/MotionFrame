@@ -1,25 +1,21 @@
-# Núcleo (download + face tracking básico)
+# MagicTouch — dependências do servidor de IA
+# Testado (pacotes prontos para Windows, sem compilar): Python 3.11, 3.12, 3.13 e 3.14.
+# Instale com:  python -m pip install --prefer-binary -r server/requirements.txt
+
+# Núcleo: download de mídia, links, pacotes, face tracking
 yt-dlp>=2024.10.0
 opencv-python>=4.8
 Pillow>=10.0
-numpy>=1.24
-
-# Leitor de links / pacotes (.zip nativo; .rar e .7z)
+numpy>=1.26
 gdown>=5.1
 rarfile>=4.1
-py7zr>=0.21
 
 # Legendas automáticas
 faster-whisper>=1.0.0
-imageio-ffmpeg>=0.5   # ffmpeg embutido (se não houver ffmpeg no PATH)
+imageio-ffmpeg>=0.5
 
-# Face tracking mais preciso (opcional; sem ele usa OpenCV Haar)
-mediapipe>=0.10,<0.11 ; python_version < "3.13"
-
-# Remover fundo / partes do corpo
+# Remover fundo / partes do corpo / remover pessoas (LaMa em ONNX)
 rembg[cpu]>=2.0.50
+huggingface_hub>=0.20
 transformers>=4.40
 torch>=2.1
-
-# Remover pessoas (inpainting LaMa; sem ele usa OpenCV)
-simple-lama-inpainting>=0.1.2

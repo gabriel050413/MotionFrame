@@ -81,7 +81,7 @@
     H.call("mf_info").then(function (r) {
       $("#compInfo").textContent = r.preview ? "Modo preview (fora do After Effects)" :
         "AE " + r.version + " · " + r.project + (r.comp ? " · " + r.comp + " " + r.w + "×" + r.h + " @" + Math.round(r.fps * 100) / 100 + "fps · " + r.sel + " sel." : "");
-    }).catch(function () {});
+    }).catch(function (e) { $("#compInfo").textContent = e.message; toast(e.message, true); });
   }
 
   /* ---------------- Servidor de IA ---------------- */
@@ -96,21 +96,45 @@
       $("#health").textContent = "Servidor parado. Clique em Iniciar (veja README para instalar as dependências).";
     });
   }
+  /* tenta vários comandos de Python até um funcionar.
+     No Windows prefere o launcher "py" com 3.12/3.11 (versões com todas as dependências prontas). */
+  function pyCandidates() {
+    var custom = val("pyPath") || store.get("py");
+    var list = custom ? [custom] : [];
+    if (process.platform === "win32") list = list.concat(["py", "python", "py -3.12", "py -3.11"]);
+    else list = list.concat(["python3.12", "python3.11", "python3", "python"]);
+    return list.filter(function (c, i) { return list.indexOf(c) === i; });
+  }
+  function splitCmd(c) {
+    var fs = H.nodeRequire("fs");
+    if (fs.existsSync(c)) return [c, []];          // caminho completo com espaços
+    var parts = c.trim().split(/\s+/);
+    return [parts[0], parts.slice(1)];
+  }
   function startServer() {
     var req = H.nodeRequire;
     if (!req) return toast("Node não disponível — rode server/start_server manualmente.", true);
     if (srvProc) return toast("Servidor já iniciado.");
     var cp = req("child_process"), path = req("path");
-    var py = val("pyPath") || store.get("py") || (process.platform === "win32" ? "python" : "python3");
-    store.set("py", py);
     var script = path.join(H.extensionPath(), "server", "mt_server.py");
-    try {
-      srvProc = cp.spawn(py, [script], { detached: false, windowsHide: true });
-      srvProc.on("exit", function () { srvProc = null; health(); });
-      srvProc.on("error", function (e) { srvProc = null; toast("Falha ao iniciar Python: " + e.message, true); });
-      toast("Iniciando servidor de IA...");
-      setTimeout(health, 2500);
-    } catch (e) { toast(e.message, true); }
+    var cands = pyCandidates(), i = 0, lastErr = "";
+    toast("Iniciando servidor de IA...");
+    (function tryNext() {
+      if (i >= cands.length) { srvProc = null; return toast("Falha ao iniciar Python: " + (lastErr || "Python não encontrado"), true); }
+      var c = cands[i++], sc = splitCmd(c), started = Date.now(), proc;
+      try { proc = cp.spawn(sc[0], sc[1].concat([script]), { detached: false, windowsHide: true }); }
+      catch (e) { lastErr = e.message; return tryNext(); }
+      srvProc = proc;
+      var errBuf = "";
+      proc.stderr && proc.stderr.on("data", function (d) { errBuf += d; });
+      proc.on("error", function (e) { lastErr = c + ": " + e.message; if (srvProc === proc) srvProc = null; tryNext(); });
+      proc.on("exit", function (code) {
+        if (srvProc === proc) srvProc = null;
+        if (Date.now() - started < 4000 && code) { lastErr = c + ": " + (errBuf.trim().split("\n").pop() || "código " + code); tryNext(); }
+        else health();
+      });
+      setTimeout(function () { if (srvProc === proc) { store.set("py", c); health(); } }, 2500);
+    })();
   }
   function ensureServer() {
     if (srvOnline) return Promise.resolve();

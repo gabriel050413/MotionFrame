@@ -35,6 +35,7 @@
     "Selecione footage no painel Project.": ["Select footage in the Project panel.", "Selecciona footage en el panel Project.", "Sélectionnez un métrage dans le panneau Projet."],
     "Sem resposta do After Effects": ["No response from After Effects", "Sin respuesta de After Effects", "Pas de réponse d'After Effects"],
     "Erro": ["Error", "Error", "Erreur"],
+    "Python não encontrado": ["Python not found", "Python no encontrado", "Python introuvable"],
 
     /* ---------- servidor de IA / links ---------- */
     "Iniciando...": ["Starting...", "Iniciando...", "Démarrage..."], "Concluído": ["Done", "Completado", "Terminé"],
@@ -284,6 +285,7 @@
 
   /* mensagens dinâmicas: [regex, [en, es, fr]] — $1, $2 são traduzidos de novo se possível */
   var PATTERNS = [
+    [/^Script do After Effects não carregou \((.*)\)$/, ["After Effects script did not load ($1)", "El script de After Effects no cargó ($1)", "Le script After Effects ne s'est pas chargé ($1)"]],
     [/^BG removido - (.*)$/, ["BG removed - $1", "Fondo quitado - $1", "Fond supprimé - $1"]],
     [/^Preset não encontrado: (.*)$/, ["Preset not found: $1", "Preset no encontrado: $1", "Preset introuvable : $1"]],
     [/^Preset desconhecido: (.*)$/, ["Unknown preset: $1", "Preset desconocido: $1", "Preset inconnu : $1"]],

@@ -74,20 +74,22 @@ Pronto: as ferramentas que não usam IA já funcionam (keyframes, Flow, Motion, 
 
 Necessário para: legendas automáticas, face tracking, remover fundo/pessoas, baixar mídia, leitor de links e .zip/.rar.
 
-1. Instale o **Python 3.11** (ou 3.10/3.12) em <https://www.python.org/downloads/>.
+1. Instale o **Python** (3.11, 3.12, 3.13 ou 3.14) em <https://www.python.org/downloads/>.
    - **Windows:** na primeira tela do instalador marque **"Add python.exe to PATH"**.
 2. Abra o Terminal/Prompt na pasta da extensão instalada e rode:
    ```bash
    # Windows
    cd %APPDATA%\Adobe\CEP\extensions\MagicTouch
-   python -m pip install -r server\requirements.txt
+   python -m pip install --upgrade pip
+   python -m pip install --prefer-binary -r server\requirements.txt
 
    # macOS
    cd ~/Library/Application\ Support/Adobe/CEP/extensions/MagicTouch
-   python3 -m pip install -r server/requirements.txt
+   python3 -m pip install --prefer-binary -r server/requirements.txt
    ```
+   Opcional (face tracking mais preciso / .7z sem 7-Zip): `pip install --prefer-binary -r server/requirements-extra.txt`
    Isso baixa ~2–3 GB (PyTorch e modelos). Se só quiser legendas, links e downloads, instale só:
-   `pip install yt-dlp opencv-python faster-whisper imageio-ffmpeg gdown rarfile py7zr Pillow numpy`
+   `pip install --prefer-binary yt-dlp opencv-python faster-whisper imageio-ffmpeg gdown rarfile Pillow numpy`
 3. Para **.rar**: instale o **7-Zip** (Windows, <https://www.7-zip.org>) ou `brew install sevenzip` (macOS).
 4. No painel, abra a aba **Render** (▶) › **Iniciar servidor**. O ponto no topo fica verde: **IA online**.
    - Se não ficar verde, preencha o campo **Python** com o caminho completo (ex.: `C:\Users\<você>\AppData\Local\Programs\Python\Python311\python.exe`) e clique de novo.
@@ -108,6 +110,8 @@ Baixe o ZIP novo (ou `git pull`) e rode o instalador de novo. Suas expressões, 
 |---|---|
 | **MagicTouch não aparece em Window › Extensions** | Rode o instalador de novo e **reinicie o AE**. Confira se a pasta `MagicTouch` está em `CEP/extensions` com `CSXS/manifest.xml` dentro (e não uma pasta a mais no meio). |
 | **Painel abre em branco / cinza** | `PlayerDebugMode` não foi aplicado para a sua versão. Rode os comandos do item 2 (Manual) para CSXS 9–13 e reinicie o AE. |
+| **"No response from After Effects" / "Sem resposta do After Effects" em todo botão** | Era um bug da versão anterior (o script do AE não carregava). Baixe a versão nova e rode o instalador de novo. Se ainda acontecer, a mensagem agora mostra a linha do erro — mande um print. |
+| **`metadata-generation-failed` … `numpy`** no pip | Versão anterior pedia um pacote que exigia numpy antigo. Baixe a versão nova e rode `python -m pip install --prefer-binary -r server\requirements.txt` de novo. Se persistir, rode `python --version` e mande o resultado. |
 | **"Abra/selecione uma composição"** | Clique na timeline da comp antes de usar a ferramenta. |
 | **Exportar frame / salvar .ffx falha** | Marque "Allow Scripts to Write Files and Access Network" (item 3). |
 | **IA offline** | Item 4: confira o Python no PATH ou informe o caminho completo na aba Render. Para ver erros, rode `tools/start_server` manualmente e deixe a janela aberta. |
