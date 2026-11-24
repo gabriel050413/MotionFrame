@@ -49,7 +49,17 @@
     return [parts[0], parts.slice(1)];
   }
 
-  var proc = null;
+  var proc = null, lastExit = null;
+  function logFile() {
+    var os = req("os"), path = req("path"), fs = req("fs");
+    var d = path.join(os.homedir(), "MagicTouch");
+    try { fs.mkdirSync(d, { recursive: true }); } catch (e) {}
+    return path.join(d, "server.log");
+  }
+  /* últimas linhas do log do servidor (para mostrar o motivo de uma queda) */
+  function logTail(n) {
+    try { return req("fs").readFileSync(logFile(), "utf8").trim().split(/\r?\n/).slice(-(n || 6)).join("\n"); } catch (e) { return ""; }
+  }
   /* opts: {script, python, log(fn), onReady(cmd), onFail(msg)} */
   function start(opts) {
     var log = opts.log || function () {};
@@ -74,16 +84,25 @@
         // a porta pode já estar em uso por um servidor que JÁ está rodando
         http("GET", "/health", undefined, 1500).then(function () { log("✔ Servidor já estava rodando."); opts.onReady && opts.onReady(null); }, next);
       }
+      // o servidor roda DESTACADO do painel (fechar/recarregar a aba não o derruba) e grava a saída num log
+      var lf = logFile(), fd = null, logStart = 0;
+      try { logStart = fs.existsSync(lf) ? fs.statSync(lf).size : 0; fd = fs.openSync(lf, "a"); } catch (e) { fd = null; }
       try {
-        p = cp.spawn(sc[0], sc[1].concat(["-u", opts.script]), { windowsHide: true, env: Object.assign({}, req("process").env, { PYTHONIOENCODING: "utf-8" }) });
-      } catch (e) { return fail(e.message); }
+        p = cp.spawn(sc[0], sc[1].concat(["-u", opts.script]), {
+          windowsHide: true, detached: true, stdio: ["ignore", fd === null ? "ignore" : fd, fd === null ? "ignore" : fd],
+          env: Object.assign({}, req("process").env, { PYTHONIOENCODING: "utf-8" })
+        });
+        p.unref();
+      } catch (e) { if (fd !== null) try { fs.closeSync(fd); } catch (x) {} return fail(e.message); }
+      if (fd !== null) try { fs.closeSync(fd); } catch (x) {}
       proc = p;
-      p.stdout && p.stdout.on("data", function (d) { String(d).split(/\r?\n/).forEach(function (l) { if (l.trim()) log("  " + l.trim()); }); });
-      p.stderr && p.stderr.on("data", function (d) { errBuf = (errBuf + d).slice(-4000); });
+      function newLog() { try { return fs.readFileSync(lf).slice(logStart).toString("utf8").slice(-4000); } catch (e) { return ""; } }
       p.on("error", function (e) { fail(e.code === "ENOENT" ? "comando não encontrado" : e.message); });
-      p.on("exit", function (code) {
-        if (!settled) return fail("saiu com código " + code + (errBuf.trim() ? " — " + errBuf.trim().split(/\r?\n/).slice(-2).join(" | ") : ""));
-        if (proc === p) { proc = null; log("Servidor parou (código " + code + ")."); }
+      p.on("exit", function (code, signal) {
+        if (code === null) code = signal || "?";
+        var tail = newLog().trim().split(/\r?\n/).slice(-2).join(" | ");
+        if (!settled) return fail("saiu com código " + code + (tail ? " — " + tail : ""));
+        if (proc === p) { proc = null; lastExit = { code: code, tail: tail, at: Date.now() }; log("✖ Servidor parou (código " + code + ")" + (tail ? ": " + tail : "")); }
       });
       // espera o servidor responder
       var tries = 0;
@@ -113,7 +132,7 @@
     });
   }
 
-  var api = { http: http, start: start, stop: stop, running: running, candidates: candidates, platform: platform, pythonVersion: pythonVersion, PORT: PORT };
+  var api = { http: http, start: start, stop: stop, running: running, logTail: logTail, lastExit: function () { return lastExit; }, logFile: function () { return req ? logFile() : ""; }, candidates: candidates, platform: platform, pythonVersion: pythonVersion, PORT: PORT };
   root.MTServer = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : this);

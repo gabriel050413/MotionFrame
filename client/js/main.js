@@ -94,21 +94,32 @@
     el.textContent = (el.textContent + line + "\n").split("\n").slice(-80).join("\n");
     el.scrollTop = el.scrollHeight;
   }
+  /* status com tolerância: só marca offline depois de 2 falhas seguidas (e nunca durante um processamento) */
+  var hFails = 0, activeJobs = 0;
+  function setStatus(state) {
+    $("#srvDot").className = "dot" + (state === "on" ? " on" : state === "busy" ? " busy" : "");
+    $("#srvTxt").textContent = state === "on" ? "IA online" : state === "busy" ? "IA ocupada" : state === "starting" ? "Iniciando IA..." : "IA offline";
+  }
   function health() {
-    return S.http("GET", "/health", undefined, 3000).then(function (h) {
-      srvOnline = true; $("#srvDot").className = "dot on"; $("#srvTxt").textContent = "IA online";
+    return S.http("GET", "/health", undefined, 8000).then(function (h) {
+      hFails = 0; srvOnline = true;
+      setStatus(h.busy || activeJobs ? "busy" : "on");
       $("#health").innerHTML = Object.keys(h.features).map(function (k) { return '<span class="' + (h.features[k] ? "y" : "n") + '">' + k + "</span>"; }).join(" ") + "<br>Saída: " + esc(h.out);
       return h;
     }).catch(function () {
-      srvOnline = false; $("#srvDot").className = "dot"; $("#srvTxt").textContent = starting ? "Iniciando IA..." : "IA offline";
-      if (!starting) $("#health").textContent = "Servidor parado. Clique em Iniciar (veja README para instalar as dependências).";
+      hFails++;
+      if (starting) return setStatus("starting");
+      if (activeJobs && hFails < 6) return setStatus("busy");     // processando pesado: dá mais tempo
+      if (hFails < 2) return;                                      // uma falha isolada não derruba o status
+      srvOnline = false; setStatus("off");
+      $("#health").textContent = "Servidor parado. Clique em Iniciar (veja README para instalar as dependências).";
     });
   }
   function startServer() {
     if (starting) return starting;
     var path = H.nodeRequire ? H.nodeRequire("path") : null;
     var script = path ? path.join(H.extensionPath(), "server", "mt_server.py") : "";
-    $("#srvTxt").textContent = "Iniciando IA...";
+    setStatus("starting");
     srvLog("— " + new Date().toLocaleTimeString() + " · pasta da extensão: " + H.extensionPath());
     starting = new Promise(function (resolve, reject) {
       S.start({
@@ -130,6 +141,8 @@
   /* inicia job e acompanha com barra de progresso */
   function job(route, body, bar, msg) {
     return ensureServer().then(function () { return post(route, body); }).then(function (j) {
+      activeJobs++; setStatus("busy");
+      var done = function (x) { activeJobs = Math.max(0, activeJobs - 1); health(); return x; };
       return new Promise(function (resolve, reject) {
         var fails = 0, t = setInterval(function () {
           S.http("GET", "/job/" + j.job, undefined, 5000).then(function (s) {
@@ -138,9 +151,9 @@
             if (msg) $(msg).textContent = s.message || "";
             if (s.status === "done") { clearInterval(t); resolve(s.result); }
             if (s.status === "error") { clearInterval(t); reject(new Error(s.error)); }
-          }).catch(function (e) { if (++fails > 5) { clearInterval(t); reject(e); } });
+          }).catch(function (e) { if (++fails > 20) { clearInterval(t); reject(new Error("Servidor de IA não respondeu.")); } });
         }, 700);
-      });
+      }).then(done, function (e) { done(); throw e; });
     });
   }
   $("#btnStartSrv").onclick = function () { startServer().then(function () { toast("IA online"); }); };
@@ -150,9 +163,21 @@
     S.pythonVersion(cmd, function (v) { srvLog("Python (" + cmd + "): " + (v || "não encontrado")); });
   };
   $("#pyPath").value = store.get("py", "");
-  /* inicia sozinho ao abrir o painel no After Effects */
-  health().then(function () { if (!srvOnline && H.inAE && H.nodeRequire && store.get("autoAI", true)) startServer(); });
-  setInterval(function () { if (!starting) health(); }, 15000);
+  /* inicia sozinho ao abrir o painel e religa se o servidor cair */
+  var autoAI = H.inAE && H.nodeRequire && store.get("autoAI", true), restarts = 0;
+  health().then(function () { if (!srvOnline && autoAI) startServer(); });
+  setInterval(function () {
+    if (starting) return;
+    health().then(function () {
+      if (srvOnline || !autoAI || hFails < 2) return;
+      if (restarts >= 5) return;                     // evita loop infinito se algo estiver quebrado
+      restarts++;
+      var ex = S.lastExit && S.lastExit();
+      srvLog("⚠ Servidor caiu" + (ex ? " (código " + ex.code + (ex.tail ? ": " + ex.tail : "") + ")" : "") + " — reiniciando…");
+      var tail = S.logTail && S.logTail(4); if (tail) srvLog(tail);
+      startServer().then(function () { restarts = 0; });
+    });
+  }, 10000);
 
   /* ---------------- LAYER ---------------- */
   $$("[data-layer]").forEach(function (b) {

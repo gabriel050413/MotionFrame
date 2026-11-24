@@ -292,3 +292,4 @@ button.primary:hover { background: linear-gradient(120deg, #7a5cff, #a95cff); bo
 .status .pill { padding: 0 7px; gap: 5px; }
 @media (max-width: 430px) { #srvTxt { display: none; } #srvPill { padding: 0 8px; } }
 @media (max-width: 360px) { #modeTxt { display: none; } }
+.dot.busy { background: #ffc24d; box-shadow: 0 0 8px #ffc24d; animation: pulse 1.2s infinite; }

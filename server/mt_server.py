@@ -34,12 +34,18 @@ _CACHE = {}
 # util
 # ---------------------------------------------------------------------------
 
+_HAS = {}
+
+
 def has(mod):
-    try:
-        __import__(mod)
-        return True
-    except Exception:
-        return False
+    """Verifica se um pacote está instalado SEM importá-lo (importar torch/transformers leva ~20 s)."""
+    if mod not in _HAS:
+        import importlib.util
+        try:
+            _HAS[mod] = importlib.util.find_spec(mod) is not None
+        except Exception:
+            _HAS[mod] = False
+    return _HAS[mod]
 
 
 def out_dir():
@@ -703,7 +709,8 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path == "/health":
             return self._send(200, {
-                "ok": True, "version": "2.0.0", "out": out_dir(),
+                "ok": True, "version": "2.1.0", "out": out_dir(), "pid": os.getpid(),
+                "busy": sum(1 for j in list(JOBS.values()) if j.get("status") == "running"),
                 "features": {
                     "transcribe": has("faster_whisper"), "facetrack": has("cv2"), "mediapipe": has("mediapipe"),
                     "removebg": has("rembg"), "clipseg": has("transformers") and has("torch"),

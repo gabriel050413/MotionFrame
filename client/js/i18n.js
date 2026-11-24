@@ -35,6 +35,7 @@
     "Selecione footage no painel Project.": ["Select footage in the Project panel.", "Selecciona footage en el panel Project.", "Sélectionnez un métrage dans le panneau Projet."],
     "Sem resposta do After Effects": ["No response from After Effects", "Sin respuesta de After Effects", "Pas de réponse d'After Effects"],
     "Erro": ["Error", "Error", "Erreur"],
+    "IA ocupada": ["AI busy", "IA ocupada", "IA occupée"],
     "Iniciando IA...": ["Starting AI...", "Iniciando IA...", "Démarrage de l'IA..."],
     "Log do servidor": ["Server log", "Registro del servidor", "Journal du serveur"],
     "Python não encontrado": ["Python not found", "Python no encontrado", "Python introuvable"],
