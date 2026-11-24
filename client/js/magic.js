@@ -224,7 +224,7 @@
   };
   $("#btnPlaceholderAll").onclick = function () {
     var ids = missing.filter(function (m) { return selected[m.id] !== false; }).map(function (m) { return m.id; });
-    if (ids.length && confirm("Trocar " + ids.length + " mídia(s) por placeholder?")) M.run("mf_placeholderFootage", { ids: ids }, "Placeholders aplicados").then(scanMissing);
+    if (ids.length && confirm(window.MT_T("Trocar " + ids.length + " mídia(s) por placeholder?"))) M.run("mf_placeholderFootage", { ids: ids }, "Placeholders aplicados").then(scanMissing);
   };
   $("#btnRelinkAll").onclick = function () {
     if (!fs) return M.toast("Node indisponível no painel.", true);

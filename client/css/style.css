@@ -232,3 +232,11 @@ canvas#curve { display: block; width: 100%; aspect-ratio: 3/2; margin: 6px 0; bo
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 label:not(.tg) { display: flex; flex-direction: column; gap: 3px; }
 label:not(.tg) > input, label:not(.tg) > select { margin-top: 0; }
+
+/* seletor de idioma */
+.pill.lang { position: relative; padding-right: 4px; gap: 4px; cursor: pointer; flex-direction: row; }
+.pill.lang svg { width: 13px; height: 13px; color: var(--c); }
+.pill.lang select { width: auto; min-height: 0; padding: 0 16px 0 0; border: 0; border-radius: 0; font-size: 10.5px; font-weight: 600; color: var(--ink);
+  background-color: transparent; background-position: right 2px center; background-size: 10px; box-shadow: none !important; cursor: pointer; }
+.pill, .brand small { white-space: nowrap; }
+.top { gap: 8px; } .status { flex-wrap: nowrap; min-width: 0; }

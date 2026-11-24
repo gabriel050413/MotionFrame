@@ -70,7 +70,7 @@
     var q = this.value.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
     go("home");
     $$("#tiles .tile").forEach(function (b, i) {
-      var t = TOOLS[i], hay = (t.t + " " + t.d + " " + t.k).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+      var t = TOOLS[i], hay = (t.t + " " + t.d + " " + t.k + " " + b.textContent).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
       b.style.display = !q || hay.indexOf(q) >= 0 ? "" : "none";
     });
   });
@@ -244,7 +244,7 @@
   $("#btnMirror").onclick = function () { curve = [1 - curve[2], 1 - curve[3], 1 - curve[0], 1 - curve[1]]; drawCurve(); };
   $("#btnReadCurve").onclick = function () { run("mf_readFlow").then(function (r) { curve = [r.x1, r.y1, r.x2, r.y2]; drawCurve(); }); };
   $("#btnSaveCurve").onclick = function () {
-    var name = prompt("Nome do preset:", "Minha curva"); if (!name) return;
+    var name = prompt(window.MT_T("Nome do preset:"), window.MT_T("Minha curva")); if (!name) return;
     var c = store.get("curves", []); c.push({ name: name, v: curve.slice() }); store.set("curves", c); curveList();
   };
   curveList();
@@ -253,8 +253,8 @@
   var motCat = "Entrada";
   function motionUI() {
     var cats = []; D.motion.forEach(function (m) { if (cats.indexOf(m.cat) < 0) cats.push(m.cat); });
-    $("#motTabs").innerHTML = cats.map(function (c) { return '<button class="' + (c === motCat ? "on" : "") + '">' + c + "</button>"; }).join("");
-    $$("#motTabs button").forEach(function (b) { b.onclick = function () { motCat = b.textContent; motionUI(); }; });
+    $("#motTabs").innerHTML = cats.map(function (c) { return '<button data-cat="' + c + '" class="' + (c === motCat ? "on" : "") + '">' + c + "</button>"; }).join("");
+    $$("#motTabs button").forEach(function (b) { b.onclick = function () { motCat = b.dataset.cat; motionUI(); }; });
     var list = D.motion.filter(function (m) { return m.cat === motCat; });
     $("#motCards").innerHTML = list.map(function (m) { return '<button class="card" data-id="' + m.id + '"><i>' + m.icon + "</i><span>" + m.name + "</span></button>"; }).join("");
     $$("#motCards .card").forEach(function (b) {
@@ -321,8 +321,8 @@
     var all = exprAll(), cats = [];
     all.forEach(function (e) { if (cats.indexOf(e.cat) < 0) cats.push(e.cat); });
     if (cats.indexOf("Minhas") < 0) cats.push("Minhas");
-    $("#exprTabs").innerHTML = cats.map(function (c) { return '<button class="' + (c === exprCat ? "on" : "") + '">' + c + "</button>"; }).join("");
-    $$("#exprTabs button").forEach(function (b) { b.onclick = function () { exprCat = b.textContent; exprUI(); }; });
+    $("#exprTabs").innerHTML = cats.map(function (c) { return '<button data-cat="' + c + '" class="' + (c === exprCat ? "on" : "") + '">' + c + "</button>"; }).join("");
+    $$("#exprTabs button").forEach(function (b) { b.onclick = function () { exprCat = b.dataset.cat; exprUI(); }; });
     var list = all.filter(function (e) { return e.cat === exprCat; });
     $("#exprList").innerHTML = list.length ? list.map(function (e, i) {
       return '<div class="item" data-i="' + i + '"><span>' + e.name + "</span><small>" + (e.target || "") + '</small><button class="mini" title="Aplicar">▶</button>' +
@@ -448,7 +448,7 @@
   $("#fxChips").innerHTML = D.effects.map(function (f) { return '<button class="chip" data-mn="' + f.mn + '">' + f.name + "</button>"; }).join("");
   $$("#fxChips .chip").forEach(function (b) { b.onclick = function () { run("mf_addEffect", { name: b.dataset.mn }, b.textContent + " adicionado"); }; });
   $("#btnAddFx").onclick = function () { if (val("fxName")) run("mf_addEffect", { name: val("fxName") }, "Efeito adicionado"); };
-  $("#btnRemoveFx").onclick = function () { if (confirm("Remover todos os efeitos das layers selecionadas?")) run("mf_removeEffects", null, "Efeitos removidos"); };
+  $("#btnRemoveFx").onclick = function () { if (confirm(window.MT_T("Remover todos os efeitos das layers selecionadas?"))) run("mf_removeEffects", null, "Efeitos removidos"); };
   function myFxUI() {
     var arr = store.get("myFx", []);
     $("#myFxList").innerHTML = arr.length ? arr.map(function (f, i) {
