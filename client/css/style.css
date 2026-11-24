@@ -243,3 +243,52 @@ label:not(.tg) > input, label:not(.tg) > select { margin-top: 0; }
 
 .log { margin: 0; max-height: 180px; overflow: auto; padding: 9px; border-radius: 10px; background: rgba(0,0,0,.4); border: 1px solid var(--line);
   font: 10.5px/1.45 "JetBrains Mono", Consolas, monospace; color: var(--mut); white-space: pre-wrap; word-break: break-all; }
+
+/* =====================================================================
+   LAYOUT SIMPLES (v2.1) — menos brilho, mais leitura
+   ===================================================================== */
+body:not(.advanced) .adv { display: none !important; }
+.aurora { opacity: .22; filter: blur(80px); }
+.aurora i { animation-duration: 60s !important; }
+.grad { animation: none; }
+.glass { background: rgba(255,255,255,.035); box-shadow: none; backdrop-filter: none; }
+button.primary { background: linear-gradient(120deg, #6d4dff, #9b4dff); box-shadow: 0 6px 16px -8px rgba(124,92,255,.9); min-height: 36px; font-size: 12.5px; }
+button.primary::after { display: none; }
+button.primary:hover { background: linear-gradient(120deg, #7a5cff, #a95cff); box-shadow: 0 8px 20px -8px rgba(124,92,255,1); }
+.head { margin: 10px 0 12px; }
+.head > .ico { width: 30px; height: 30px; border-radius: 9px; background: rgba(124,92,255,.22); box-shadow: none; }
+.head > .ico svg { width: 16px; height: 16px; }
+.head p { font-size: 11.5px; }
+.rail button.on { box-shadow: none; background: rgba(124,92,255,.28); }
+.rail button.on::before { box-shadow: none; }
+.rail-logo { box-shadow: none; background: transparent; }
+.cmd { height: 32px; }
+.cmd:focus-within { box-shadow: 0 0 0 3px rgba(124,92,255,.15); }
+
+/* modo */
+.pill.mode { cursor: pointer; }
+.pill.mode svg { width: 12px; height: 12px; }
+.pill.mode.on { color: #fff; border-color: rgba(124,92,255,.6); background: rgba(124,92,255,.25); }
+
+/* home */
+.hello { display: flex; align-items: center; gap: 10px; margin: 8px 0 6px; }
+.hello img { width: 34px; height: 34px; }
+.hello b { display: block; font-size: 15px; font-weight: 700; }
+.hello small { display: block; color: var(--dim); font-size: 10.5px; }
+.tiles { display: flex; flex-direction: column; gap: 4px; }
+.tg-head { margin: 14px 0 4px; }
+.tile { flex-direction: row; align-items: center; justify-content: flex-start; gap: 10px; min-height: 0; padding: 8px 10px; border-radius: 11px;
+  background: rgba(255,255,255,.03); }
+.tile:hover { transform: none; box-shadow: none; border-color: rgba(124,92,255,.5); background: rgba(124,92,255,.08); }
+.tile .ti { width: 28px; height: 28px; margin: 0; flex: none; background: rgba(124,92,255,.22); }
+.tile .tt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.tile b { font-size: 12.5px; font-weight: 600; } .tile small { font-size: 10.5px; }
+.tile .chev { color: var(--dim); font-size: 18px; line-height: 1; }
+.card:hover { transform: none; box-shadow: none; }
+.brand small { display: none; }
+.brand b { font-size: 14px; }
+.top { padding: 9px 10px 5px; }
+.status { gap: 4px; }
+.status .pill { padding: 0 7px; gap: 5px; }
+@media (max-width: 430px) { #srvTxt { display: none; } #srvPill { padding: 0 8px; } }
+@media (max-width: 360px) { #modeTxt { display: none; } }

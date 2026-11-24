@@ -46,24 +46,26 @@
 
   /* tiles da home + busca */
   var TOOLS = [
-    { v: "links", i: "link", t: "Leitor de links", d: "Drive, Dropbox, .zip/.rar → importa tudo", k: "link drive dropbox zip rar importar projeto aep ai ffx pacote" },
-    { v: "pack", i: "box", t: "Presets .ffx", d: "Cria projeto com todos os presets", k: "ffx preset projeto automatico zip rar salvar exportar" },
-    { v: "missing", i: "alert", t: "Mídias ausentes", d: "Encontre e substitua offline", k: "missing midia ausente offline relink substituir" },
-    { v: "layer", i: "layers", t: "Layer", d: "Criar, cortar, freeze, speed ramp", k: "null solid split cortar reverse freeze ramp twixtor velocidade comp" },
-    { v: "keys", i: "diamond", t: "Keyframes", d: "Proporcionais ao clip", k: "keyframe proporcional preset ffx esticar" },
-    { v: "flow", i: "curve", t: "Flow", d: "Editor de curvas", k: "flow curva ease bezier grafico speed" },
-    { v: "motion", i: "sparkle", t: "Motion", d: "Animações e transições", k: "motion bro animacao transicao shake glitch zoom pop texto" },
-    { v: "captions", i: "cc", t: "Legendas", d: "Auto legenda + face track", k: "legenda caption subtitle whisper tracking rosto cabeca" },
-    { v: "expr", i: "braces", t: "Expressões", d: "Biblioteca + copiar", k: "expressao expression wiggle loop typewriter" },
-    { v: "ai", i: "wand", t: "IA", d: "Fundo, partes, pessoas", k: "fundo background remover pessoa ia inpaint corpo braco cabeca" },
-    { v: "media", i: "download", t: "Mídia", d: "YouTube, TikTok, Insta…", k: "download baixar youtube tiktok instagram media musica" },
-    { v: "align", i: "target", t: "Align", d: "Anchor e centralizar", k: "anchor ancora alinhar centralizar fit fill" },
-    { v: "effects", i: "sliders", t: "Efeitos", d: "Favoritos, próprio, cor", k: "efeito fx glow blur cor cc lumetri proprio" },
-    { v: "organize", i: "folder", t: "Organizar", d: "Renomeia, colore, pré-compõe", k: "organizar projeto renomear cor pasta precompor" },
-    { v: "render", i: "play", t: "Render", d: "Fila, projeto, sessão", k: "render exportar prores sessao tempo servidor cache versao" }
+    { g: "Importar", v: "links", i: "link", t: "Importar projeto", d: "Link do Drive/Dropbox ou .zip/.rar", k: "link drive dropbox zip rar importar projeto aep ai ffx pacote" },
+    { g: "Importar", v: "pack", i: "box", t: "Presets .ffx", d: "Cria um projeto com todos os presets", k: "ffx preset projeto automatico zip rar salvar exportar" },
+    { g: "Importar", v: "media", i: "download", t: "Baixar vídeo/música", d: "YouTube, TikTok, Instagram…", k: "download baixar youtube tiktok instagram media musica" },
+    { g: "Importar", v: "missing", i: "alert", t: "Mídias ausentes", d: "Encontre e substitua arquivos offline", k: "missing midia ausente offline relink substituir" },
+    { g: "Animar", v: "motion", i: "sparkle", t: "Animações", d: "Entradas, saídas, transições, shake", k: "motion bro animacao transicao shake glitch zoom pop texto" },
+    { g: "Animar", v: "keys", i: "diamond", t: "Keyframes no clip", d: "Ajusta a animação ao tamanho do clip", k: "keyframe proporcional preset ffx esticar" },
+    { g: "Animar", v: "flow", i: "curve", t: "Curvas (Flow)", d: "Suavize os keyframes", k: "flow curva ease bezier grafico speed" },
+    { g: "Animar", v: "expr", i: "braces", t: "Expressões", d: "Wiggle, loop, typewriter…", k: "expressao expression wiggle loop typewriter" },
+    { g: "IA", v: "captions", i: "cc", t: "Legendas automáticas", d: "Com glow seguindo a cabeça", k: "legenda caption subtitle whisper tracking rosto cabeca" },
+    { g: "IA", v: "ai", i: "wand", t: "Remover fundo / pessoas", d: "Do frame atual", k: "fundo background remover pessoa ia inpaint corpo braco cabeca" },
+    { g: "Projeto", v: "layer", i: "layers", t: "Layers", d: "Criar, cortar, congelar, speed ramp", k: "null solid split cortar reverse freeze ramp twixtor velocidade comp" },
+    { g: "Projeto", v: "align", i: "target", t: "Alinhar", d: "Anchor point e centralizar", k: "anchor ancora alinhar centralizar fit fill" },
+    { g: "Projeto", v: "effects", i: "sliders", t: "Efeitos e cor", d: "Favoritos, seu efeito, cores", k: "efeito fx glow blur cor cc lumetri proprio" },
+    { g: "Projeto", v: "organize", i: "folder", t: "Organizar projeto", d: "Renomeia, colore e agrupa layers", k: "organizar projeto renomear cor pasta precompor" },
+    { g: "Projeto", v: "render", i: "play", t: "Render e IA", d: "Exportar e status do servidor", k: "render exportar prores sessao tempo servidor cache versao" }
   ];
+  var lastG = "";
   $("#tiles").innerHTML = TOOLS.map(function (t) {
-    return '<button class="tile" data-go="' + t.v + '"><span class="ti">' + window.MT_ICON(t.i) + "</span><b>" + t.t + "</b><small>" + t.d + "</small></button>";
+    var head = t.g !== lastG ? '<h3 class="tg-head">' + t.g + "</h3>" : ""; lastG = t.g;
+    return head + '<button class="tile" data-go="' + t.v + '"><span class="ti">' + window.MT_ICON(t.i) + "</span><span class='tt'><b>" + t.t + "</b><small>" + t.d + "</small></span><span class='chev'>›</span></button>";
   }).join("");
   $$("#tiles .tile").forEach(function (b) { b.onclick = function () { go(b.dataset.go); }; });
   $("#search").addEventListener("input", function () {
@@ -73,6 +75,7 @@
       var t = TOOLS[i], hay = (t.t + " " + t.d + " " + t.k + " " + b.textContent).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
       b.style.display = !q || hay.indexOf(q) >= 0 ? "" : "none";
     });
+    $$("#tiles .tg-head").forEach(function (h) { h.style.display = q ? "none" : ""; });
   });
   $("#search").addEventListener("keydown", function (e) {
     if (e.key === "Enter") { var f = $$("#tiles .tile").filter(function (b) { return b.style.display !== "none"; })[0]; if (f) { go(f.dataset.go); this.value = ""; } }
@@ -503,7 +506,17 @@
     $("#stMonth").textContent = fmt(st2["m" + key(n, "m")] || 0);
     $("#stYear").textContent = fmt(st2["y" + key(n, "y")] || 0);
   }, 1000);
-  $("#btnSession").onclick = function () { go("render"); };
+  
+
+  /* ---------------- MODO SIMPLES / AVANÇADO ---------------- */
+  function setMode(adv) {
+    document.body.classList.toggle("advanced", adv);
+    $("#modeTxt").textContent = adv ? "Avançado" : "Simples";
+    $("#btnMode").classList.toggle("on", adv);
+    store.set("advanced", adv);
+  }
+  $("#btnMode").onclick = function () { setMode(!document.body.classList.contains("advanced")); };
+  setMode(!!store.get("advanced", false));
 
   /* helpers compartilhados com magic.js */
   window.MT = { run: run, job: job, toast: toast, store: store, post: post, ensureServer: ensureServer, go: go, esc: esc, $: $, $$: $$, val: val, num: num, chk: chk };

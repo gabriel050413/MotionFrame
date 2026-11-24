@@ -32,23 +32,25 @@
 
   var NAV = [
     ["home", "home", "Início"],
-    ["links", "link", "Leitor de links"],
-    ["pack", "box", "Projeto de presets .ffx"],
-    ["missing", "alert", "Mídias não encontradas"],
     "-",
-    ["layer", "layers", "Layer"],
-    ["keys", "diamond", "Keyframes proporcionais"],
-    ["flow", "curve", "Flow"],
-    ["motion", "sparkle", "Motion Library"],
-    ["captions", "cc", "Legendas + Face Track"],
+    ["links", "link", "Importar projeto"],
+    ["pack", "box", "Presets .ffx"],
+    ["media", "download", "Baixar vídeo/música"],
+    ["missing", "alert", "Mídias ausentes"],
+    "-",
+    ["motion", "sparkle", "Animações"],
+    ["keys", "diamond", "Keyframes no clip"],
+    ["flow", "curve", "Curvas (Flow)"],
     ["expr", "braces", "Expressões"],
     "-",
-    ["ai", "wand", "IA: fundo / pessoas"],
-    ["media", "download", "Baixar mídia"],
-    ["align", "target", "Anchor / Align"],
-    ["effects", "sliders", "Efeitos / Cor"],
-    ["organize", "folder", "Organizador"],
-    ["render", "play", "Render / Projeto"]
+    ["captions", "cc", "Legendas automáticas"],
+    ["ai", "wand", "Remover fundo / pessoas"],
+    "-",
+    ["layer", "layers", "Layers"],
+    ["align", "target", "Alinhar"],
+    ["effects", "sliders", "Efeitos e cor"],
+    ["organize", "folder", "Organizar projeto"],
+    ["render", "play", "Render e IA"]
   ];
   var rail = document.getElementById("nav");
   rail.innerHTML = '<div class="rail-logo"><img src="img/logo.svg" alt=""></div>' + NAV.map(function (n) {
