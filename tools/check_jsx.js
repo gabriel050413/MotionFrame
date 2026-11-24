@@ -13,6 +13,7 @@ src.split("\n").forEach(function (line, i) {
   if (new RegExp("[{,]\\s*(" + RES + ")\\s*:").test(code)) errs.push((i + 1) + ": palavra reservada como chave sem aspas");
   if (new RegExp("\\.(" + RES + ")\\b").test(code)) errs.push((i + 1) + ": acesso .palavraReservada");
   if (/\b(let|const)\s+\w|=>|`/.test(code)) errs.push((i + 1) + ": sintaxe ES6");
+  if (/\.(map|forEach|filter|reduce|some|every|trim|startsWith|endsWith|includes)\(/.test(code)) errs.push((i + 1) + ": método que não existe no ExtendScript (ES3)");
 });
 try { new Function(src); } catch (e) { errs.push("sintaxe: " + e.message); }
 if (errs.length) { console.error("hostscript.jsx incompatível com o After Effects:\n  " + errs.join("\n  ")); process.exit(1); }

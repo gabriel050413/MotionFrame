@@ -772,6 +772,23 @@ function applyTransition(comp, o) {
             break;
         case "tr_blur":
             var g = addEffect(adj, "ADBE Gaussian Blur 2"); k3(g.property(1), 0, 120, 0); break;
+        case "tr_glitch":
+            var gw = addEffect(adj, "ADBE Wave Warp");
+            if (gw) applyExprSafe(gw.property(2), "var k=Math.abs(time-" + m + ");seedRandom(Math.floor(time*24),true);(k<" + d + ")?random(0,70):0");
+            applyExprSafe(posP, "var k=Math.abs(time-" + m + ");var v=value;if(k<" + (d * 0.6) + "){seedRandom(Math.floor(time*24),true);v[0]+=random(-90,90);}v");
+            break;
+        case "tr_shake":
+            applyExprSafe(posP, "var k=Math.abs(time-" + m + ");var amp=linear(k,0," + d + ",140,0);var w=wiggle(18,amp);[w[0],w[1]]");
+            var oc = addEffect(adj, "ADBE Optics Compensation"); var fov = getP(oc, ["ADBE Optics Compensation-0001", "Field Of View (FOV)"]);
+            if (fov) k3(fov, 0, 60, 0);
+            break;
+        case "tr_dzoom":
+            k3(scP, 100, 30, 100);
+            var oc2 = addEffect(adj, "ADBE Optics Compensation"); var fov2 = getP(oc2, ["ADBE Optics Compensation-0001", "Field Of View (FOV)"]);
+            if (fov2) k3(fov2, 0, 90, 0);
+            break;
+        case "tr_zrot": k3(scP, 100, 260, 100); k3(rotP, 0, 90, 0); break;
+        case "tr_pan": k3(posP, C, [C[0] - comp.width * 0.5, C[1]], C); break;
         default: break;
     }
     return ok({});
@@ -905,9 +922,14 @@ function setP(group, keys, v) {
     }
     return false;
 }
+function getP(group, keys) {
+    if (!group) return null;
+    for (var i = 0; i < keys.length; i++) { try { var p = group.property(keys[i]); if (p) return p; } catch (e) {} }
+    return null;
+}
 function col4(c) { return [c[0], c[1], c[2], c.length > 3 ? c[3] : 1]; }
 function setColor(group, keys, c) { return setP(group, keys, col4(c)) || setP(group, keys, [c[0], c[1], c[2]]); }
-function exprStr(s) { return String(s).replace(/\\/g, "\\\\").replace(/"/g, '\\"'); }
+function exprStr(s) { return String(s).replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\r/g, "\\r").replace(/\n/g, "\\n"); }
 
 /* ================================================================== */
 /* BIBLIOTECA \u2014 presets de texto (estilo Animation Composer)           */
@@ -937,6 +959,9 @@ function keyLinear2(p, t0, v0, t1, v1, infl) {
     for (k = 1; k <= p.numKeys; k++) { try { p.setTemporalEaseAtKey(k, e, e); } catch (x) {} }
 }
 function buildTextPreset(comp, layer, spec, dur) {
+    if (spec.decode) applyDecode(layer, dur, spec.decode === "loop");
+    var hasProps = false, q; for (q in (spec.props || {})) if (spec.props.hasOwnProperty(q)) hasProps = true;
+    if (!hasProps) return;
     var A0 = textAnimators(layer).addProperty("ADBE Text Animator");
     var ai = A0.propertyIndex;
     A0.name = "MT " + spec.name;
@@ -1190,6 +1215,146 @@ function addElement(comp, id, o) {
     }
     return sh;
 }
+
+/* ================================================================== */
+/* Extras estilo Mister Horse: decode, titulos, overlays, fundos, chroma */
+/* ================================================================== */
+function decodeExpr(dur, continuous) {
+    var ch = 'var ch="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#%&";';
+    if (continuous) return 'var src=""+value;' + ch + 'seedRandom(Math.floor(time*12),true);var o="";' +
+        'for(var i=0;i<src.length;i++){var c=src.charAt(i);o+=(c!=" "&&c!="\\r"&&random()<0.15)?ch.charAt(Math.floor(random(ch.length))):c;}o';
+    return 'var src=""+value;var d=' + dur + ';var t=time-inPoint;var o=src;' + ch +
+        'if(t<d){var n=Math.floor(src.length*Math.max(0,t)/d);seedRandom(Math.floor(time*24),true);o=src.substr(0,n);' +
+        'for(var i=n;i<src.length;i++){var c=src.charAt(i);o+=(c==" "||c=="\\r")?c:ch.charAt(Math.floor(random(ch.length)));}}o';
+}
+function applyDecode(layer, dur, continuous) {
+    var sp = layer.property("ADBE Text Properties").property("ADBE Text Document");
+    var err = applyExprSafe(sp, decodeExpr(dur, continuous));
+    if (err) throw new Error(err);
+}
+function textLayerAt(comp, txt, size, pos, t, dur, color) {
+    var tx = comp.layers.addText(txt), tp = tx.property("ADBE Text Properties").property("ADBE Text Document"), td = tp.value;
+    try { td.font = "Arial-BoldMT"; } catch (e) {}
+    td.fontSize = size; td.applyFill = true; td.fillColor = color || [1, 1, 1];
+    td.justification = ParagraphJustification.CENTER_JUSTIFY;
+    try { tp.setValue(td); } catch (e2) {}
+    tx.startTime = 0; tx.inPoint = t; tx.outPoint = Math.min(comp.duration, t + dur);
+    centerLayer(comp, tx);
+    tx.property("ADBE Transform Group").property("ADBE Position").setValue(pos);
+    return tx;
+}
+function chromaSplit(comp, ly) {
+    var cols = [[1, 0.1, 0.2], [0.1, 0.9, 1]], offs = [-1, 1], i;
+    for (i = 0; i < 2; i++) {
+        var d = ly.duplicate();
+        d.name = ly.name + (i ? " | Ciano" : " | Vermelho");
+        var fx = d.property("ADBE Effect Parade"); while (fx.numProperties) fx.property(1).remove();
+        var f = addEffect(d, "ADBE Fill"); if (f) setColor(f, ["ADBE Fill-0002", "Color"], cols[i]);
+        d.blendingMode = BlendingMode.SCREEN;
+        d.moveAfter(ly);
+        applyExprSafe(d.property("ADBE Transform Group").property("ADBE Position"),
+            'seedRandom(index,true);var a=6+wiggle(8,4)[0]-value[0];var v=value;v[0]+=' + offs[i] + '*a;v');
+    }
+}
+function addExtraElement(comp, id, o) {
+    var t = comp.time, C = [comp.width / 2, comp.height / 2], sh, G, i;
+    switch (id) {
+        case "ti_timer":
+            var tm = textLayerAt(comp, "00:00.00", Math.round(comp.height / 9), C, t, 5);
+            applyExprSafe(tm.property("ADBE Text Properties").property("ADBE Text Document"),
+                'var s=Math.max(0,time-inPoint);var m=Math.floor(s/60),x=Math.floor(s%60),c=Math.floor((s%1)*100);' +
+                '(m<10?"0":"")+m+":"+(x<10?"0":"")+x+"."+(c<10?"0":"")+c');
+            tm.name = "MT Timer"; return tm;
+        case "ti_rating":
+            var rt = textLayerAt(comp, "0.0", Math.round(comp.height / 9), [C[0] + comp.height * 0.06, C[1]], t, 4);
+            applyExprSafe(rt.property("ADBE Text Properties").property("ADBE Text Document"),
+                'var v=' + (o.rating || 4.6) + ';linear(time-inPoint,0,1.2,0,v).toFixed(1)');
+            rt.name = "MT Rating";
+            sh = shapeLayerAt(comp, "MT Rating Star", t, 4, [C[0] - comp.height * 0.1, C[1] - comp.height * 0.03]); G = newGroup(sh, "Star");
+            var st = gAdd(G, "ADBE Vector Shape - Star");
+            setP(st(), ["ADBE Vector Star Points"], 5); setP(st(), ["ADBE Vector Star Inner Radius"], comp.height * 0.022); setP(st(), ["ADBE Vector Star Outer Radius"], comp.height * 0.05);
+            gFill(G, [1, 0.8, 0.1]);
+            popScale(gXform(G).property("ADBE Vector Scale"), t, 0.4);
+            return sh;
+        case "ti_bullets":
+            var items = o.lines || ["Primeiro item", "Segundo item", "Terceiro item"], bt = [];
+            for (i = 0; i < items.length; i++) bt.push("\u2022 " + items[i]);
+            var bl = textLayerAt(comp, bt.join("\r"), Math.round(comp.height / 18), C, t, 5);
+            var tp = bl.property("ADBE Text Properties").property("ADBE Text Document"), td = tp.value;
+            td.justification = ParagraphJustification.LEFT_JUSTIFY; tp.setValue(td); centerLayer(comp, bl);
+            bl.name = "MT Bullet List";
+            buildTextPreset(comp, bl, { name: "Bullets", based: "lines", props: { opacity: 0, pos: [-60, 0] }, dir: "in" }, 1.2);
+            return bl;
+        case "ov_letterbox":
+            var h = Math.round(comp.height * 0.12), k;
+            for (k = 0; k < 2; k++) {
+                sh = shapeLayerAt(comp, "MT Letterbox " + (k ? "Base" : "Topo"), 0, comp.duration, [C[0], k ? comp.height - h / 2 : h / 2]);
+                G = newGroup(sh, "Bar");
+                setP(gAdd(G, "ADBE Vector Shape - Rect")(), ["ADBE Vector Rect Size"], [comp.width + 20, h]);
+                gFill(G, [0, 0, 0]);
+                keyLinear2(gXform(G).property("ADBE Vector Position"), t, [0, k ? h : -h], t + 0.6, [0, 0], 80);
+            }
+            return sh;
+        case "ov_leak":
+            sh = shapeLayerAt(comp, "MT Light Leak", t, 2.5, [comp.width * 0.15, comp.height * 0.3]); G = newGroup(sh, "Leak");
+            setP(gAdd(G, "ADBE Vector Shape - Ellipse")(), ["ADBE Vector Ellipse Size"], [comp.width * 0.9, comp.height * 0.7]);
+            gFill(G, o.color || [1, 0.45, 0.1]);
+            sh.blendingMode = BlendingMode.ADD;
+            var gb = addEffect(sh, "ADBE Gaussian Blur 2"); if (gb) setP(gb, ["ADBE Gaussian Blur 2-0001", "Blurriness"], comp.width * 0.18);
+            var lp = sh.property("ADBE Transform Group").property("ADBE Position");
+            keyLinear2(lp, t, [comp.width * 0.05, comp.height * 0.25], t + 2.5, [comp.width * 0.95, comp.height * 0.7], 30);
+            var lo = sh.property("ADBE Transform Group").property("ADBE Opacity");
+            lo.setValueAtTime(t, 0); lo.setValueAtTime(t + 0.6, 85); lo.setValueAtTime(t + 1.9, 85); lo.setValueAtTime(t + 2.5 - comp.frameDuration, 0);
+            return sh;
+        case "ov_grain":
+            var adj = comp.layers.addSolid([1, 1, 1], "MT Grain", comp.width, comp.height, comp.pixelAspect, comp.duration);
+            adj.adjustmentLayer = true; adj.label = 5;
+            var nz = addEffect(adj, "ADBE Noise"); if (nz) { setP(nz, ["ADBE Noise-0001", "Amount of Noise"], 8); setP(nz, ["ADBE Noise-0003", "Clipping"], 1); }
+            return adj;
+        case "bg_circles":
+            sh = shapeLayerAt(comp, "MT Circles", 0, comp.duration, C);
+            var pal = [[1, 0.25, 0.25], [1, 0.55, 0.15], [1, 0.85, 0.2], [1, 0.3, 0.5]];
+            for (i = 3; i >= 0; i--) {
+                G = newGroup(sh, "C" + i);
+                var dd = Math.max(comp.width, comp.height) * (0.35 + i * 0.4);
+                setP(gAdd(G, "ADBE Vector Shape - Ellipse")(), ["ADBE Vector Ellipse Size"], [dd, dd]);
+                gFill(G, pal[i]);
+                keyLinear2(gXform(G).property("ADBE Vector Scale"), t + i * 0.08, [0, 0], t + 0.6 + i * 0.08, [100, 100], 80);
+            }
+            sh.moveToEnd();
+            return sh;
+        case "bg_stripes":
+            sh = shapeLayerAt(comp, "MT Stripes", 0, comp.duration, C); G = newGroup(sh, "Stripes");
+            var big = Math.max(comp.width, comp.height) * 2;
+            setP(gAdd(G, "ADBE Vector Shape - Rect")(), ["ADBE Vector Rect Size"], [60, big]);
+            gFill(G, o.color || [1, 0.85, 0.2]);
+            var rp = gAdd(G, "ADBE Vector Filter - Repeater");
+            setP(rp(), ["ADBE Vector Repeater Copies"], 40);
+            setP(rp().property("ADBE Vector Repeater Transform"), ["ADBE Vector Repeater Position"], [120, 0]);
+            setP(rp(), ["ADBE Vector Repeater Offset"], -20);
+            setP(gXform(G), ["ADBE Vector Rotation"], 45);
+            applyExprSafe(rp().property("ADBE Vector Repeater Offset"), "-20+(time*0.8)%1");
+            var bgs = comp.layers.addSolid([0.95, 0.35, 0.15], "MT Stripes BG", comp.width, comp.height, comp.pixelAspect, comp.duration);
+            bgs.moveToEnd(); sh.moveBefore(bgs);
+            return sh;
+        case "bg_gradient":
+            var g = comp.layers.addSolid([0, 0, 0], "MT Gradient BG", comp.width, comp.height, comp.pixelAspect, comp.duration);
+            var rg = addEffect(g, "ADBE Ramp");
+            if (rg) {
+                setP(rg, ["ADBE Ramp-0001", "Start of Ramp"], [0, 0]); setColor(rg, ["ADBE Ramp-0002", "Start Color"], [0.45, 0.2, 1]);
+                setP(rg, ["ADBE Ramp-0003", "End of Ramp"], [comp.width, comp.height]); setColor(rg, ["ADBE Ramp-0004", "End Color"], [0.1, 0.85, 1]);
+            }
+            g.moveToEnd();
+            return g;
+        case "fx_chroma":
+            var L = selLayers(comp, true);
+            for (i = 0; i < L.length; i++) chromaSplit(comp, L[i]);
+            return L[0];
+        default:
+            return null;
+    }
+}
+
 /* arg: {id, color?, handle?, label?} */
 function mf_addElement(arg) {
     return undo("Elemento", function () {
@@ -1199,7 +1364,7 @@ function mf_addElement(arg) {
             for (i = 0; i < L.length; i++) addTextBox(comp, L[i], MT_BOXES[o.id]);
             return ok({ count: L.length });
         }
-        addElement(comp, o.id, o);
+        if (!addExtraElement(comp, o.id, o)) addElement(comp, o.id, o);
         return ok({ count: 1 });
     });
 }
@@ -1286,11 +1451,26 @@ function styleCaption(comp, layer, st, starts, ends) {
                 "if(i<t.length){var nx=(i+1<t.length)?t[i+1]:e[i]+0.3;on=(time>=t[i]&&time<nx);}" +
                 "var a=on?100:0;[a,a,a]");
         }
+        if (st.words === "type") {
+            wordAnimator(layer, "MT Type", { opacity: 0 },
+                "var t=" + T + ";var i=textIndex-1;var k=(i<t.length)?t[i]:0;var a=(time<k)?100:0;" +
+                "if(time>=k&&time<k+0.12){seedRandom(textIndex*7+Math.floor(time*30),true);a=(random()>0.5)?100:0;}[a,a,a]");
+        }
         if (st.words === "reveal" || st.words === "highlight-reveal") {
             wordAnimator(layer, "MT Reveal", { opacity: 0, scale: [60, 60] },
                 "var t=" + T + ";var i=textIndex-1;var k=(i<t.length)?t[i]:0;var a=linear(time,k,k+0.08,100,0);[a,a,a]");
         }
     }
+}
+/* junta as palavras; breakAfter = quantas palavras ficam na 1a linha */
+function joinWords(parts, breakAfter) {
+    var out = "", i;
+    for (i = 0; i < parts.length; i++) {
+        if (!parts[i]) continue;
+        if (out) out += (breakAfter && i === breakAfter) ? "\r" : " ";
+        out += parts[i];
+    }
+    return out;
 }
 function mf_createCaptions(arg) {
     return undo("Legendas", function () {
@@ -1333,14 +1513,22 @@ function mf_createCaptions(arg) {
                     if (!wt) continue;
                     parts.push(wt); starts.push(mediaToComp(words[w].start)); ends.push(mediaToComp(words[w].end));
                 }
-                txt = parts.join(" ");
-            } else txt = String(sg.text).replace(/^\s+|\s+$/g, "");
+                txt = joinWords(parts, sg.breakAfter);
+            } else txt = joinWords(String(sg.text).replace(/^\s+|\s+$/g, "").split(/\s+/), sg.breakAfter);
             if (!txt) continue;
             var t = comp.layers.addText(txt);
-            t.name = N("caption") + " " + (i + 1) + " - " + txt.substr(0, 20);
+            t.name = N("caption") + " " + (i + 1) + " - " + txt.replace(/[\r\n]+/g, " ").substr(0, 24);
             t.label = 3;
             t.inPoint = mediaToComp(sg.start); t.outPoint = Math.max(mediaToComp(sg.end), t.inPoint + comp.frameDuration * 2);
-            try { styleCaption(comp, t, st, starts, ends); } catch (se) { errs.push(se.message); }
+            var st2 = {}, kk; for (kk in st) if (st.hasOwnProperty(kk)) st2[kk] = st[kk];
+            if (sg.color) { st2.color = sg.color; }
+            try { styleCaption(comp, t, st2, starts, ends); } catch (se) { errs.push(se.message); }
+            if (sg.hot && sg.hot.length && sg.hotColor) {
+                try {
+                    wordAnimator(t, "MT Destaque", { fill: sg.hotColor },
+                        "var h=[" + sg.hot.join(",") + "];var a=0;for(var q=0;q<h.length;q++){if(h[q]==textIndex)a=100;}[a,a,a]");
+                } catch (he) { errs.push(he.message); }
+            }
             var pos = t.property("ADBE Transform Group").property("ADBE Position");
             if (follow) applyExprSafe(pos, 'var p=thisComp.layer("' + exprStr(follow.name) + '").transform.position;[p[0],p[1]]');
             else pos.setValue([comp.width / 2, comp.height * (st.y || 0.8)]);

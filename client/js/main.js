@@ -131,12 +131,22 @@
     starting.catch(function () {});
     return starting;
   }
+  /* confere DE VERDADE se o servidor responde (não confia no status da tela); se não, liga e espera */
   function ensureServer() {
-    if (srvOnline) return Promise.resolve();
-    return health().then(function () { if (!srvOnline) return startServer(); });
+    return S.http("GET", "/health", undefined, 4000).then(function () { hFails = 0; srvOnline = true; }, function () {
+      srvOnline = false;
+      return startServer().then(function () {
+        return S.http("GET", "/health", undefined, 8000).then(function () { srvOnline = true; health(); });
+      });
+    });
   }
-  function post(route, body) {
-    return S.http("POST", route, body, 60000).then(function (j) { if (j.error) throw new Error(j.error); return j; });
+  function refused(e) { return /ECONNREFUSED|ECONNRESET|socket hang up|Failed to fetch/i.test(String(e && e.message)); }
+  function post(route, body, retried) {
+    return S.http("POST", route, body, 60000).then(function (j) { if (j.error) throw new Error(j.error); return j; }, function (e) {
+      if (!retried && refused(e)) { srvLog("⚠ " + e.message + " — religando o servidor…"); return ensureServer().then(function () { return post(route, body, true); }); }
+      if (refused(e)) throw new Error("Servidor de IA não está rodando. Veja o Log do servidor (Render e IA › Avançado).");
+      throw e;
+    });
   }
   /* inicia job e acompanha com barra de progresso */
   function job(route, body, bar, msg) {
@@ -300,6 +310,7 @@
     return { start: Math.max(0, (m.inPoint - m.startTime) / s), end: Math.max(0, (m.outPoint - m.startTime) / s) };
   }
   function createCaps(segments) {
+    if (window.MT_CAPPREP) segments = window.MT_CAPPREP(segments);
     var arg = { segments: segments, media: lastMedia, style: capStyle(), offset: [num("capOffX"), num("capOffY")] };
     if (chk("capTrack") && lastTrack) arg.track = lastTrack;
     return run("mf_createCaptions", arg, function (r) { return r.count + " legendas criadas"; }).then(function (r) {

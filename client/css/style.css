@@ -412,3 +412,33 @@ button.primary:hover { background: linear-gradient(120deg, #7a5cff, #a95cff); bo
 .cpv.rays::before { content: ""; position: absolute; inset: -40%; background: repeating-conic-gradient(rgba(255,255,255,.12) 0 6deg, transparent 6deg 18deg); opacity: .6; }
 .cpt { position: relative; line-height: 1.15; }
 .cpv .rv { animation: rv 1.6s ease infinite both; display: inline-block; } @keyframes rv { 0% { opacity: 0; transform: scale(.6); } 15%, 100% { opacity: 1; transform: none; } }
+/* prévias extras (v2.3) */
+.lp-decode { animation: lpDec .5s steps(1) infinite; animation-delay: calc(var(--i) * -0.17s) !important; }
+@keyframes lpDec { 0% { opacity: 1; } 30% { opacity: .35; transform: scale(1.15); } 60% { opacity: 1; transform: none; } }
+.timer::after { content: "00:02.14"; font: 800 15px/1 "Courier New", monospace; color: #fff; animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: .75; } }
+.rating { font: 800 16px Arial, sans-serif; color: #ffcc1a; animation: mPop 2s ease infinite both; } .rating b::after { content: "4.6"; color: #fff; }
+.bul { display: flex; flex-direction: column; gap: 2px; font: 700 9px Arial, sans-serif; color: #fff; }
+.bul i { font-style: normal; animation: mLeft 2.4s ease infinite both; } .bul i:nth-child(2) { animation-delay: .15s; } .bul i:nth-child(3) { animation-delay: .3s; }
+.lbx { background: linear-gradient(135deg, #3b2c5c, #1b2a3a); } .lbx i { position: absolute; left: 0; right: 0; height: 12px; background: #000; animation: lbx 2.4s ease infinite both; }
+.lbx i:first-child { top: 0; --y: -12px; } .lbx i:last-child { bottom: 0; --y: 12px; }
+@keyframes lbx { 0% { transform: translateY(var(--y)); } 30%, 100% { transform: none; } }
+.leak { width: 60px; height: 40px; border-radius: 50%; background: #ff7a1a; filter: blur(14px); mix-blend-mode: screen; animation: leak 2.6s ease-in-out infinite; }
+@keyframes leak { 0% { transform: translateX(-50px); opacity: 0; } 30%, 70% { opacity: .95; } 100% { transform: translateX(50px); opacity: 0; } }
+.grain { background-color: #26222e; background-image: radial-gradient(rgba(255,255,255,.18) 1px, transparent 1px); background-size: 3px 3px; animation: grain .3s steps(2) infinite; }
+@keyframes grain { 50% { background-position: 1px 2px; } }
+.circ { position: relative; width: 2px; height: 2px; } .circ i { position: absolute; border-radius: 50%; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(0); animation: circ 2.4s ease infinite both; }
+.circ i:nth-child(1) { width: 110px; height: 110px; background: #ff4040; } .circ i:nth-child(2) { width: 70px; height: 70px; background: #ff8c26; animation-delay: .1s; } .circ i:nth-child(3) { width: 34px; height: 34px; background: #ffd933; animation-delay: .2s; }
+@keyframes circ { 0% { transform: translate(-50%, -50%) scale(0); } 30%, 100% { transform: translate(-50%, -50%) scale(1); } }
+.stripes { background: repeating-linear-gradient(45deg, #ffd933 0 8px, #f2591f 8px 16px); background-size: 200% 200%; animation: stripes 2s linear infinite; }
+@keyframes stripes { to { background-position: 45px 0; } }
+.gradbg { background: linear-gradient(135deg, #7333ff, #1ad9ff); }
+.chroma { position: relative; font: 800 16px Arial, sans-serif; color: #fff; }
+.chroma::before, .chroma::after { content: attr(data-t); position: absolute; inset: 0; mix-blend-mode: screen; animation: chr 1s steps(2) infinite; }
+.chroma::before { color: #ff1a33; transform: translateX(-2px); } .chroma::after { color: #1ae6ff; transform: translateX(2px); animation-delay: -.5s; }
+@keyframes chr { 50% { transform: translateX(0); } }
+.sq.m-tr_glitch, .sq2.m-tr_glitch { animation: mGl .6s steps(1) infinite; } .sq2.m-tr_glitch { opacity: .5; }
+.sq.m-tr_shake { animation: mShake .25s linear infinite; } .sq2.m-tr_shake { display: none; }
+.sq.m-tr_dzoom { animation: trA 2s ease infinite; } .sq2.m-tr_dzoom { animation: trZO 2s ease infinite; }
+.sq.m-tr_zrot { animation: trA 2s ease infinite; } .sq2.m-tr_zrot { animation: trSp 2s ease infinite; }
+.sq.m-tr_pan { animation: trSA 2s ease infinite; } .sq2.m-tr_pan { animation: trSB 2s ease infinite; }

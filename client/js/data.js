@@ -85,6 +85,19 @@ window.MF_DATA = {
     { cat: "Texto · Saída", id: "o_type", name: "Typewriter Out", based: "chars", props: { opacity: 0 }, smooth: 0, order: "rev", dir: "out", dur: 0.8 },
     { cat: "Texto · Saída", id: "o_track", name: "Tracking Out", based: "lines", props: { opacity: 0, track: 80, blur: 15 }, dir: "out", dur: 1 },
 
+    { cat: "Texto · Entrada", id: "mh_scale_track", name: "Ease Scale & Tracking", based: "lines", props: { opacity: 0, scale: [60, 60], track: 60 }, dir: "in", dur: 1.1 },
+    { cat: "Texto · Entrada", id: "mh_pos_together", name: "Ease Position Together", based: "lines", props: { opacity: 0, pos: [0, 90] }, dir: "in", dur: 0.9 },
+    { cat: "Texto · Entrada", id: "mh_fade_pos", name: "Ease Fade & Position Together", based: "words", props: { opacity: 0, pos: [0, 40] }, shape: "rampUp", dir: "in", dur: 1 },
+    { cat: "Texto · Entrada", id: "mh_scale_rand", name: "Ease Scale Randomly", based: "chars", props: { scale: [0, 0] }, order: "rand", dir: "in", dur: 1 },
+    { cat: "Texto · Entrada", id: "mh_line_scale", name: "Line Scale Character", based: "chars", props: { scale: [100, 0] }, dir: "in", dur: 0.9 },
+    { cat: "Texto · Entrada", id: "mh_pos_single", name: "Position Single", based: "chars", props: { opacity: 0, pos: [0, 60] }, smooth: 0, dir: "in", dur: 1 },
+    { cat: "Texto · Entrada", id: "mh_pos_rot", name: "Overshoot Position & Rotate", based: "words", props: { opacity: 0, pos: [0, 70], rot: 25 }, dir: "in", dur: 0.9 },
+    { cat: "Texto · Entrada", id: "mh_decode", name: "Flickering Decode & Scale", based: "chars", props: { opacity: 0, scale: [140, 140] }, order: "rand", decode: "in", dir: "in", dur: 1.2 },
+    { cat: "Texto · Loop", id: "mh_decode_loop", name: "Decode Continuously", based: "chars", props: {}, decode: "loop", dir: "loop", loop: "none" },
+    { cat: "Texto · Loop", id: "mh_wig_pos_scale", name: "Wiggly Position & Scale Randomly", based: "chars", props: { pos: [0, 18], scale: [130, 130] }, dir: "loop", loop: "wiggle", freq: 2 },
+    { cat: "Texto · Loop", id: "mh_wig_prs", name: "Wiggly Position & Rotate & Scale", based: "chars", props: { pos: [10, 14], rot: 15, scale: [120, 120] }, dir: "loop", loop: "wiggle", freq: 3 },
+    { cat: "Texto · Loop", id: "mh_wig_fade", name: "Wiggly Fade", based: "chars", props: { opacity: 0 }, dir: "loop", loop: "wiggle", freq: 2 },
+    { cat: "Texto · Loop", id: "mh_flick_ps", name: "Flickering Position & Scale Randomly", based: "chars", props: { pos: [0, -20], scale: [130, 130] }, dir: "loop", loop: "flicker" },
     { cat: "Texto · Loop", id: "l_wave", name: "Wave", based: "chars", props: { pos: [0, -25] }, dir: "loop", loop: "wave" },
     { cat: "Texto · Loop", id: "l_bounce", name: "Bouncing Letters", based: "chars", props: { pos: [0, -40] }, dir: "loop", loop: "bounce" },
     { cat: "Texto · Loop", id: "l_wiggle", name: "Wiggle Letters", based: "chars", props: { pos: [0, 12], rot: 8 }, dir: "loop", loop: "wiggle" },
@@ -107,12 +120,25 @@ window.MF_DATA = {
     { cat: "Elementos", id: "el_swoosh", name: "Swoosh", prev: "swoosh" },
     { cat: "Elementos", id: "el_arrow", name: "Seta", prev: "arrow" },
     { cat: "Elementos", id: "el_sparkle", name: "Brilho", prev: "sparkle" },
+    { cat: "Títulos", id: "ti_timer", name: "Timer", prev: "timer" },
+    { cat: "Títulos", id: "ti_rating", name: "Rating Counter", prev: "rating" },
+    { cat: "Títulos", id: "ti_bullets", name: "Bullet List", prev: "bullets" },
+    { cat: "Overlays", id: "ov_letterbox", name: "Letterbox", prev: "letterbox" },
+    { cat: "Overlays", id: "ov_leak", name: "Light Leak", prev: "leak" },
+    { cat: "Overlays", id: "ov_grain", name: "Grão de filme", prev: "grain" },
+    { cat: "Fundos", id: "bg_circles", name: "Círculos", prev: "circles" },
+    { cat: "Fundos", id: "bg_stripes", name: "Listras diagonais", prev: "stripes" },
+    { cat: "Fundos", id: "bg_gradient", name: "Degradê", prev: "gradient" },
+    { cat: "Layer · Loop", id: "fx_chroma", name: "2 Color Chroma Split", prev: "chroma" },
     { cat: "Social", id: "so_subscribe", name: "Inscreva-se", prev: "subscribe" },
     { cat: "Social", id: "so_follow", name: "Siga @perfil", prev: "follow" }
   ],
 
   /* MODELOS DE LEGENDA (o painel preenche os campos e manda os extras) */
   captionTemplates: [
+    { id: "cinema", name: "Cinema Glow", desc: "2 linhas, glow, final colorido", font: "Arial-BoldMT", size: 40, upper: true, tracking: 20, color: [1, 1, 1], glow: true, glowStrength: 0.9, shadow: true, words: "type", lines: 2, hot: "last", anim: "none", follow: true, offY: 160, wordsPer: 5 },
+    { id: "neon_edit", name: "Neon Edit", desc: "Espaçado, palavra-chave neon", font: "Arial-BoldMT", size: 36, upper: true, tracking: 70, color: [1, 1, 1], glow: true, glowStrength: 1.2, shadow: false, words: "type", lines: 2, hot: "keyword", palette: [[1, 0.75, 0.15], [1, 0.55, 0.1], [1, 0.25, 0.3], [1, 0.4, 0.7]], anim: "none", follow: true, offY: 40, wordsPer: 5 },
+    { id: "neon_color", name: "Neon Colorido", desc: "Cada legenda numa cor neon", font: "Arial-BoldMT", size: 38, upper: true, tracking: 40, color: [1, 1, 1], glow: true, glowStrength: 1.4, shadow: false, words: "type", lines: 2, captionColor: "palette", palette: [[1, 0.2, 0.28], [1, 0.42, 0.75], [0.35, 0.65, 1], [0.3, 1, 0.55], [1, 0.8, 0.2]], anim: "none", follow: true, offY: 40, wordsPer: 4 },
     { id: "filme", name: "Filme", desc: "Pequena, glow, segue a cabeça", font: "Arial-BoldMT", size: 34, upper: true, tracking: 40, color: [1, 1, 1], glow: true, glowStrength: 0.7, shadow: true, anim: "fade", follow: true, wordsPer: 6 },
     { id: "tiktok_glow", name: "TikTok Glow", desc: "Glow, sombra, degradê", font: "Arial-Black", size: 58, upper: true, color: [1, 1, 1], gradient: [[1, 1, 1], [0.72, 0.72, 0.8]], glow: true, shadow: true, anim: "pop", wordsPer: 4 },
     { id: "tiktok_rays", name: "TikTok Raios", desc: "Glow, raios, bevel", font: "Arial-Black", size: 58, upper: true, color: [1, 1, 1], glow: true, rays: true, bevel: true, shadow: true, anim: "pop", wordsPer: 4 },
@@ -151,7 +177,12 @@ window.MF_DATA = {
     { cat: "Transições", id: "tr_whip", name: "Whip Pan", icon: "⇢" },
     { cat: "Transições", id: "tr_spin", name: "Spin", icon: "⟳" },
     { cat: "Transições", id: "tr_flash", name: "Flash", icon: "✷" },
-    { cat: "Transições", id: "tr_blur", name: "Blur", icon: "◌" }
+    { cat: "Transições", id: "tr_blur", name: "Blur", icon: "◌" },
+    { cat: "Transições", id: "tr_glitch", name: "Digital Glitch", icon: "▦" },
+    { cat: "Transições", id: "tr_shake", name: "Shake & Distort", icon: "≈" },
+    { cat: "Transições", id: "tr_dzoom", name: "Distorted Zoom Out", icon: "◎" },
+    { cat: "Transições", id: "tr_zrot", name: "Zoom & Rotate", icon: "↻" },
+    { cat: "Transições", id: "tr_pan", name: "Pan", icon: "⇠" }
   ],
 
   /* Curvas (cubic-bezier x1,y1,x2,y2) */

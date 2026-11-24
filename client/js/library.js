@@ -6,7 +6,7 @@
   var T = function (s) { return window.MT_T ? window.MT_T(s) : s; };
 
   /* ---------------- catálogo unificado ---------------- */
-  var CATS = ["Favoritos", "Texto · Entrada", "Texto · Saída", "Texto · Loop", "Caixas de texto", "Elementos", "Social", "Transições", "Layer · Entrada", "Layer · Saída", "Layer · Loop"];
+  var CATS = ["Favoritos", "Texto · Entrada", "Texto · Saída", "Texto · Loop", "Títulos", "Caixas de texto", "Elementos", "Social", "Transições", "Overlays", "Fundos", "Layer · Entrada", "Layer · Saída", "Layer · Loop"];
   var MOTION_CAT = { "Entrada": "Layer · Entrada", "Saída": "Layer · Saída", "Loop/FX": "Layer · Loop", "Transições": "Transições" };
   var ITEMS = [];
   D.textPresets.forEach(function (p) { ITEMS.push({ kind: "text", id: p.id, cat: p.cat, name: p.name, spec: p }); });
@@ -30,7 +30,8 @@
       "--sc:" + ((P.scale || [100, 100])[0] / 100) + ";--rot:" + (P.rot || 0) + "deg;--blur:" + ((P.blur || 0) / 6) + "px;" +
       "--op:" + (P.opacity !== undefined ? P.opacity / 100 : 1) + ";--skew:" + (-(P.skew || 0)) + "deg;--ls:" + ((P.track || 0) / 12) + "px;" +
       (P.fill ? "--col:rgb(" + P.fill.map(function (c) { return Math.round(c * 255); }).join(",") + ");" : "--col:#fff;");
-    var cls = spec.dir === "loop" ? "lp-" + spec.loop : spec.dir === "out" ? "pv-out" : "pv-in";
+    var cls = spec.dir === "loop" ? "lp-" + (spec.decode ? "decode" : spec.loop) : spec.dir === "out" ? "pv-out" : "pv-in";
+    if (spec.decode && spec.dir !== "loop") cls += " lp-decode";
     var html = u.map(function (ch, i) {
       var k = spec.order === "rev" ? n - 1 - i : spec.order === "rand" ? (i * 7 + 3) % n : i;
       var step = spec.based === "chars" ? (spec.smooth === 0 ? 0.09 : 0.06) : 0.14;
@@ -52,7 +53,17 @@
       arrow: '<div class="pv el"><svg viewBox="0 0 120 40" class="draw"><path d="M10 20 H 104 M 88 8 L 106 20 L 88 32"/></svg></div>',
       sparkle: '<div class="pv el"><svg viewBox="-30 -30 60 60" class="spark"><path d="M0 -26 C 3 -6, 6 -3, 26 0 C 6 3, 3 6, 0 26 C -3 6, -6 3, -26 0 C -6 -3, -3 -6, 0 -26 Z"/></svg></div>',
       subscribe: '<div class="pv el"><span class="sub"><b>INSCREVA-SE</b><b>INSCRITO</b></span></div>',
-      follow: '<div class="pv el"><span class="bx pill follow">@perfil</span></div>'
+      follow: '<div class="pv el"><span class="bx pill follow">@perfil</span></div>',
+      timer: '<div class="pv el"><span class="timer"></span></div>',
+      rating: '<div class="pv el"><span class="rating">★ <b></b></span></div>',
+      bullets: '<div class="pv el"><span class="bul"><i>• Item um</i><i>• Item dois</i><i>• Item três</i></span></div>',
+      letterbox: '<div class="pv el lbx"><i></i><i></i></div>',
+      leak: '<div class="pv el"><span class="leak"></span></div>',
+      grain: '<div class="pv el grain"></div>',
+      circles: '<div class="pv el"><span class="circ"><i></i><i></i><i></i></span></div>',
+      stripes: '<div class="pv el stripes"></div>',
+      gradient: '<div class="pv el gradbg"></div>',
+      chroma: '<div class="pv el"><span class="chroma" data-t="Texto">Texto</span></div>'
     };
     return map[prev] || '<div class="pv el"></div>';
   }
@@ -115,7 +126,12 @@
     if (sh.length) st.push("text-shadow:" + sh.join(","));
     if (t.stroke) st.push("-webkit-text-stroke:" + Math.max(1, t.stroke / 4) + "px #000;paint-order:stroke fill");
     if (t.gradient) st.push("background:linear-gradient(" + rgb(t.gradient[0]) + "," + rgb(t.gradient[1]) + ");-webkit-background-clip:text;color:transparent");
+    var hotIdx = t.hot === "last" ? 2 : t.hot === "keyword" ? 1 : -1;
+    var pcol = t.palette ? t.palette[0] : DEF_PAL[0];
+    if (t.captionColor === "palette") { st.push("color:" + rgb(pcol)); sh = ["0 0 6px " + rgb(pcol), "0 0 14px " + rgb(pcol)]; st.push("text-shadow:" + sh.join(",")); }
     var inner = words.map(function (w, i) {
+      if (i === hotIdx) return (t.lines === 2 && i === 2 ? "<br>" : "") + '<span style="color:' + rgb(pcol) + ';text-shadow:0 0 6px ' + rgb(pcol) + ',0 0 14px ' + rgb(pcol) + '">' + (t.upper ? w.toUpperCase() : w) + "</span>";
+      if (t.lines === 2 && i === 2) return "<br>" + (t.upper ? w.toUpperCase() : w);
       var cls = (t.words === "highlight" && i === 1) ? ' class="hl" style="color:' + rgb(t.highlight) + (t.highlightScale > 100 ? ";display:inline-block;transform:scale(1.12);margin:0 .28em" : "") + '"' :
         (t.words === "reveal" ? ' class="rv" style="animation-delay:' + i * 0.35 + 's"' : "");
       var tx = t.upper ? w.toUpperCase() : t.lower ? w.toLowerCase() : w;
@@ -133,12 +149,43 @@
   function tpl() { for (var i = 0; i < TPL.length; i++) if (TPL[i].id === cur) return TPL[i]; return TPL[0]; }
   function setChk(id, v) { var el = document.getElementById(id); if (el) el.checked = !!v; }
   function setVal(id, v) { var el = document.getElementById(id); if (el && v !== undefined) el.value = v; }
+  /* ---------- preparo por legenda: quebra em 2 linhas, palavra de destaque e cor ---------- */
+  var STOP = ("a o e é de da do das dos em no na nos nas um uma uns umas que se por para com sem ao à os as eu tu ele ela nós vós eles elas " +
+    "the a an and or of to in on at for is are was were be it i you he she we they my your his her our their this that with " +
+    "el la los las y o de del en un una que es por con le les et ou du des un une est pour avec").split(" ");
+  var DEF_PAL = [[0.3, 1, 0.42], [1, 0.23, 0.3], [1, 0.77, 0.19], [0.25, 0.9, 1], [1, 0.37, 0.64]];
+  function clean(w) { return String(w).toLowerCase().replace(/[^\wÀ-ÿ']/g, ""); }
+  window.MT_CAPPREP = function (segs) {
+    var t = tpl(), pal = t.palette || DEF_PAL;
+    return segs.map(function (sg, i) {
+      var s = JSON.parse(JSON.stringify(sg));
+      var words = (s.words && s.words.length ? s.words.map(function (w) { return String(w.text).trim(); }) : String(s.text).split(/\s+/)).filter(Boolean);
+      var col = pal[(i * 3 + 1) % pal.length];
+      if (t.lines === 2 && words.length >= 3) {
+        var total = words.join(" ").length, best = 1, bestD = 1e9, acc = 0;
+        for (var k = 1; k < words.length; k++) { acc += words[k - 1].length + 1; var d = Math.abs(acc - (total - acc)); if (d < bestD) { bestD = d; best = k; } }
+        s.breakAfter = best;
+      }
+      if (t.hot === "last" && words.length) {
+        s.hot = [words.length];
+        if (words.length > 2 && clean(words[words.length - 1]).length <= 3) s.hot.unshift(words.length - 1);
+      } else if (t.hot === "keyword" && words.length) {
+        var cand = words.map(function (w, j) { return { j: j + 1, w: clean(w) }; }).filter(function (o) { return o.w && STOP.indexOf(o.w) < 0; })
+          .sort(function (a, b) { return b.w.length - a.w.length; });
+        if (cand.length) { s.hot = [cand[0].j]; if (words.length >= 5 && cand[1]) s.hot.push(cand[1].j); }
+      }
+      if (s.hot) s.hotColor = col;
+      if (t.captionColor === "palette") s.color = col;
+      return s;
+    });
+  };
   function fillForm() {
     var t = tpl();
     setVal("capFont", t.font); setVal("capSize", t.size); setVal("capColor", hex(t.color));
     setChk("capGlow", t.glow); setChk("capShadow", t.shadow); setChk("capUpper", t.upper);
     setVal("capStroke", t.stroke || 0); setVal("capAnim", t.anim || "none");
     setChk("capTrack", !!t.follow); setVal("capWords", t.wordsPer || 3);
+    if (t.offY !== undefined) setVal("capOffY", t.offY);
   }
   /* extras do modelo que não têm campo no formulário (degradê, raios, caixa, destaque…) */
   window.MT_CAPTPL = function () {
