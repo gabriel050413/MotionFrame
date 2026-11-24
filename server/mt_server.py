@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-MotionFrame AI Server
----------------------
+MagicTouch AI Server
+--------------------
 Servidor local (http://127.0.0.1:5717) usado pelo painel do After Effects para:
   * /transcribe   legendas automáticas (faster-whisper, timestamps por palavra)
   * /facetrack    rastreio automático do rosto/cabeça (MediaPipe ou OpenCV)
@@ -9,6 +9,8 @@ Servidor local (http://127.0.0.1:5717) usado pelo painel do After Effects para:
   * /inpaint      remover pessoas/objetos da imagem com IA (LaMa ou OpenCV)
   * /download     baixar mídias do YouTube, TikTok, Instagram, X... (yt-dlp)
   * /search       pesquisar vídeos (YouTube) para baixar
+  * /fetch        leitor de links de projeto (Drive, Dropbox, links diretos...) + extração
+  * /extract      extrai .zip/.rar/.7z locais e classifica os arquivos (.ffx, .aep, .ai, mídias...)
 Tarefas longas viram "jobs": o POST devolve {"job": id} e o painel consulta GET /job/<id>.
 
 Só escuta em 127.0.0.1. Todas as dependências são opcionais e carregadas sob demanda;
@@ -41,7 +43,7 @@ def has(mod):
 
 
 def out_dir():
-    d = os.environ.get("MF_OUT") or os.path.join(os.path.expanduser("~"), "MotionFrame")
+    d = os.environ.get("MF_OUT") or os.path.join(os.path.expanduser("~"), "MagicTouch")
     os.makedirs(d, exist_ok=True)
     return d
 
@@ -418,11 +420,234 @@ def do_search(o):
     return {"results": res}
 
 
+
+# ---------------------------------------------------------------------------
+# Leitor de links de projeto + extração de pacotes
+# ---------------------------------------------------------------------------
+KINDS = {
+    "ffx": {".ffx"},
+    "aep": {".aep", ".aet", ".aepx"},
+    "ai": {".ai", ".eps", ".pdf", ".svg"},
+    "psd": {".psd"},
+    "video": {".mp4", ".mov", ".avi", ".mkv", ".webm", ".m4v", ".mxf", ".wmv", ".mpg", ".mpeg", ".gif"},
+    "audio": {".mp3", ".wav", ".aac", ".m4a", ".aif", ".aiff", ".ogg", ".flac"},
+    "image": {".png", ".jpg", ".jpeg", ".tif", ".tiff", ".exr", ".tga", ".bmp", ".webp", ".dpx", ".hdr"},
+    "font": {".ttf", ".otf", ".ttc"},
+    "mogrt": {".mogrt"},
+    "lut": {".cube", ".3dl", ".look"},
+    "script": {".jsx", ".jsxbin"},
+    "archive": {".zip", ".rar", ".7z"},
+}
+
+
+def kind_of(path):
+    ext = os.path.splitext(path)[1].lower()
+    for k, exts in KINDS.items():
+        if ext in exts:
+            return k
+    return "other"
+
+
+def extract_archive(path, dest):
+    import shutil
+    import subprocess
+    import zipfile
+
+    os.makedirs(dest, exist_ok=True)
+    ext = os.path.splitext(path)[1].lower()
+    if ext == ".zip":
+        with zipfile.ZipFile(path) as z:
+            for m in z.infolist():
+                name = m.filename
+                # zips do macOS/Windows antigos: corrige nomes em cp437
+                if not (m.flag_bits & 0x800):
+                    try:
+                        name = name.encode("cp437").decode("utf-8")
+                    except Exception:
+                        pass
+                if name.startswith("__MACOSX/") or os.path.basename(name).startswith("._"):
+                    continue
+                target = os.path.normpath(os.path.join(dest, name))
+                if not target.startswith(os.path.normpath(dest)):
+                    continue  # proteção contra zip-slip
+                if m.is_dir():
+                    os.makedirs(target, exist_ok=True)
+                    continue
+                os.makedirs(os.path.dirname(target), exist_ok=True)
+                with z.open(m) as src, open(target, "wb") as out:
+                    shutil.copyfileobj(src, out)
+        return dest
+    if ext == ".rar":
+        try:
+            import rarfile  # pip install rarfile (precisa do unrar/7z instalado)
+            with rarfile.RarFile(path) as r:
+                r.extractall(dest)
+            return dest
+        except Exception:
+            pass
+    # .7z, ou .rar sem rarfile: tenta 7-Zip / unrar da máquina
+    for exe in ("7z", "7za", "7zz", r"C:\Program Files\7-Zip\7z.exe", "unrar"):
+        found = shutil.which(exe) or (exe if os.path.exists(exe) else None)
+        if not found:
+            continue
+        cmd = [found, "x", "-y", path, dest + os.sep] if "unrar" in exe else [found, "x", "-y", f"-o{dest}", path]
+        if subprocess.run(cmd, capture_output=True).returncode == 0:
+            return dest
+    if ext == ".7z":
+        import py7zr  # pip install py7zr
+        with py7zr.SevenZipFile(path) as z:
+            z.extractall(dest)
+        return dest
+    raise RuntimeError(f"Não consegui extrair {os.path.basename(path)} — instale o 7-Zip ou 'pip install rarfile py7zr'.")
+
+
+def scan_folder(root, progress=None, depth=0):
+    """Lista recursivamente, extraindo pacotes encontrados (até 3 níveis)."""
+    files = []
+    for dirpath, _dirs, names in os.walk(root):
+        for n in names:
+            if n.startswith(".") or n.startswith("._"):
+                continue
+            full = os.path.join(dirpath, n)
+            k = kind_of(full)
+            if k == "archive" and depth < 3:
+                sub = os.path.splitext(full)[0]
+                if progress:
+                    progress(60, f"Extraindo {n}...")
+                try:
+                    extract_archive(full, sub)
+                    prefix = os.path.relpath(sub, root).replace(os.sep, "/")
+                    for f in scan_folder(sub, progress, depth + 1):
+                        f["group"] = prefix + ("/" + f["group"] if f.get("group") else "")
+                        files.append(f)
+                except Exception as e:  # noqa
+                    files.append({"path": full, "kind": "archive", "name": n, "error": str(e)})
+                continue
+            rel = os.path.relpath(dirpath, root)
+            files.append({"path": full, "kind": k, "name": n, "group": "" if rel == "." else rel.replace(os.sep, "/")})
+    # sem duplicatas (o mesmo arquivo pode ser visto 2x se a pasta extraída já existia)
+    seen, out = set(), []
+    for f in files:
+        if f["path"] not in seen:
+            seen.add(f["path"])
+            out.append(f)
+    return out
+
+
+def summarize(files, root, title=None):
+    counts = {}
+    for f in files:
+        counts[f["kind"]] = counts.get(f["kind"], 0) + 1
+    return {"root": root, "files": files, "counts": counts, "title": title or os.path.basename(root.rstrip("/\\"))}
+
+
+def _http_download(url, folder, progress, label=""):
+    import re
+    import urllib.parse
+    import urllib.request
+
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 MagicTouch"})
+    with urllib.request.urlopen(req, timeout=60) as r:
+        cd = r.headers.get("Content-Disposition", "")
+        m = re.search(r"filename\*=UTF-8''([^;]+)", cd) or re.search(r'filename="?([^";]+)"?', cd)
+        name = urllib.parse.unquote(m.group(1)) if m else os.path.basename(urllib.parse.urlparse(r.url).path) or "download"
+        name = re.sub(r'[<>:"/\\|?*]', "_", name)
+        total = int(r.headers.get("Content-Length") or 0)
+        dst = os.path.join(folder, name)
+        done = 0
+        with open(dst, "wb") as f:
+            while True:
+                chunk = r.read(1 << 20)
+                if not chunk:
+                    break
+                f.write(chunk)
+                done += len(chunk)
+                if total:
+                    progress(50 * done / total, f"Baixando {label or name}... {done >> 20}/{total >> 20} MB")
+    return dst
+
+
+def fetch_link(url, folder, progress):
+    """Baixa 1 link para `folder`. Suporta Google Drive (arquivo/pasta), Dropbox, OneDrive, links diretos e sites de vídeo."""
+    import re
+
+    u = url.strip()
+    if "drive.google.com" in u or "docs.google.com" in u:
+        import gdown  # pip install gdown
+        if "/folders/" in u:
+            progress(5, "Baixando pasta do Google Drive...")
+            gdown.download_folder(u, output=folder, quiet=True, remaining_ok=True)
+            return folder
+        progress(5, "Baixando do Google Drive...")
+        return gdown.download(u, output=folder + os.sep, quiet=True, fuzzy=True)
+    if "dropbox.com" in u:
+        u = re.sub(r"([?&])dl=0", r"\1dl=1", u)
+        if "dl=1" not in u:
+            u += ("&" if "?" in u else "?") + "dl=1"
+        return _http_download(u, folder, progress)
+    if "1drv.ms" in u or "onedrive.live.com" in u:
+        import base64
+        enc = base64.b64encode(u.encode()).decode().rstrip("=").replace("/", "_").replace("+", "-")
+        return _http_download(f"https://api.onedrive.com/v1.0/shares/u!{enc}/root/content", folder, progress)
+    if re.search(r"(youtube\.com|youtu\.be|tiktok\.com|instagram\.com|vimeo\.com|twitter\.com|x\.com)/", u):
+        r = job_download({"url": u, "folder": folder}, progress)
+        return r["path"]
+    return _http_download(u, folder, progress)
+
+
+def job_fetch(o, progress):
+    urls = [u for u in (o.get("urls") or [o.get("url", "")]) if u and u.strip()]
+    if not urls:
+        raise RuntimeError("Nenhum link.")
+    root = o.get("folder") or os.path.join(out_dir(), "Projetos", time.strftime("%Y%m%d_%H%M%S"))
+    os.makedirs(root, exist_ok=True)
+    got = []
+    for i, u in enumerate(urls):
+        progress(45 * i / len(urls), f"Link {i + 1}/{len(urls)}...")
+        r = fetch_link(u, root, lambda p, m=None: progress(45 * (i + p / 100) / len(urls), m))
+        if r:
+            got.append(r)
+    progress(55, "Lendo arquivos...")
+    files = scan_folder(root, progress)
+    title = None
+    if len(got) == 1:
+        title = os.path.splitext(os.path.basename(str(got[0]).rstrip("/\\")))[0]
+    return summarize(files, root, title)
+
+
+def job_extract(o, progress):
+    paths = o.get("paths") or [o.get("path")]
+    if len(paths) == 1 and os.path.isdir(paths[0]):
+        # pasta local: lê no lugar (sem copiar mídias pesadas); pacotes internos são extraídos ao lado
+        return summarize(scan_folder(paths[0], progress), paths[0])
+    root = o.get("folder") or os.path.join(out_dir(), "Projetos", time.strftime("%Y%m%d_%H%M%S"))
+    os.makedirs(root, exist_ok=True)
+    import shutil
+
+    if len(paths) == 1 and kind_of(paths[0]) == "archive":
+        name = os.path.splitext(os.path.basename(paths[0]))[0]
+        dst = os.path.join(root, name)
+        progress(10, f"Extraindo {name}...")
+        extract_archive(paths[0], dst)
+        return summarize(scan_folder(dst, progress), dst, name)
+    for i, p in enumerate(paths):
+        progress(80 * i / len(paths), f"Lendo {os.path.basename(p)}...")
+        if os.path.isdir(p):
+            dst = os.path.join(root, os.path.basename(p.rstrip("/\\")))
+            if not os.path.exists(dst):
+                shutil.copytree(p, dst)
+        elif kind_of(p) == "archive":
+            extract_archive(p, os.path.join(root, os.path.splitext(os.path.basename(p))[0]))
+        else:
+            shutil.copy2(p, root)
+    return summarize(scan_folder(root, progress), root)
+
 # ---------------------------------------------------------------------------
 # HTTP
 # ---------------------------------------------------------------------------
 JOB_ROUTES = {"/transcribe": job_transcribe, "/facetrack": job_facetrack, "/removebg": job_removebg,
-              "/inpaint": job_inpaint, "/download": job_download}
+              "/inpaint": job_inpaint, "/download": job_download,
+              "/fetch": job_fetch, "/extract": job_extract}
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -445,11 +670,12 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path == "/health":
             return self._send(200, {
-                "ok": True, "version": "1.0.0", "out": out_dir(),
+                "ok": True, "version": "2.0.0", "out": out_dir(),
                 "features": {
                     "transcribe": has("faster_whisper"), "facetrack": has("cv2"), "mediapipe": has("mediapipe"),
                     "removebg": has("rembg"), "clipseg": has("transformers") and has("torch"),
                     "lama": has("simple_lama_inpainting"), "download": has("yt_dlp"),
+                    "drive": has("gdown"), "rar": has("rarfile"), "7z": has("py7zr"),
                 }})
         if self.path.startswith("/job/"):
             jid = self.path.split("/")[-1]
@@ -475,7 +701,7 @@ class Handler(BaseHTTPRequestHandler):
 
 def main():
     srv = ThreadingHTTPServer((HOST, PORT), Handler)
-    print(f"MotionFrame AI server em http://{HOST}:{PORT}  (saída: {out_dir()})", flush=True)
+    print(f"MagicTouch AI server em http://{HOST}:{PORT}  (saída: {out_dir()})", flush=True)
     srv.serve_forever()
 
 

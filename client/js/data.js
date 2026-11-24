@@ -1,4 +1,4 @@
-/* MotionFrame — bibliotecas embutidas (expressões, presets, curvas, efeitos) */
+/* MagicTouch — bibliotecas embutidas (expressões, presets, curvas, efeitos) */
 window.MF_DATA = {
 
   /* Expressões mais usadas — target = propriedade em que é aplicada se nenhuma prop estiver selecionada */
@@ -41,7 +41,7 @@ window.MF_DATA = {
     { cat: "Shape/Layout", name: "Caixa que acompanha o texto (Size)", target: "ADBE Vector Rect Size", expr: "L = thisComp.layer(index - 1); pad = 40;\nr = L.sourceRectAtTime(time, false);\n[r.width + pad * 2, r.height + pad]" },
     { cat: "Shape/Layout", name: "Anchor no centro do texto", target: "anchor", expr: "r = sourceRectAtTime(time, false);\n[r.left + r.width / 2, r.top + r.height / 2]" },
     { cat: "Shape/Layout", name: "Grudar no canto inferior", target: "position", expr: "m = 60;\n[thisComp.width / 2, thisComp.height - m]" },
-    { cat: "Shape/Layout", name: "Parallax (z = profundidade)", target: "position", expr: "depth = 0.3;\nc = thisComp.layer(\"MF Null\").transform.position;\nvalue + (c - [thisComp.width/2, thisComp.height/2]) * depth" }
+    { cat: "Shape/Layout", name: "Parallax (z = profundidade)", target: "position", expr: "depth = 0.3;\nc = thisComp.layer(\"MT Null\").transform.position;\nvalue + (c - [thisComp.width/2, thisComp.height/2]) * depth" }
   ],
 
   /* Presets procedurais (aplicados via ExtendScript, sem precisar de .ffx) */

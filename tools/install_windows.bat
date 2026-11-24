@@ -1,9 +1,9 @@
 @echo off
-REM MotionFrame - instalador Windows
+REM MagicTouch - instalador Windows
 REM 1) Libera extensoes nao assinadas (PlayerDebugMode) para CSXS 9-12
 for %%v in (9 10 11 12) do reg add "HKCU\Software\Adobe\CSXS.%%v" /v PlayerDebugMode /t REG_SZ /d 1 /f >nul
 REM 2) Copia a extensao
-set DEST=%APPDATA%\Adobe\CEP\extensions\MotionFrame
+set DEST=%APPDATA%\Adobe\CEP\extensions\MagicTouch
 if exist "%DEST%" rmdir /s /q "%DEST%"
 mkdir "%DEST%"
 xcopy /e /i /y "%~dp0..\CSXS" "%DEST%\CSXS" >nul
@@ -16,5 +16,5 @@ where python >nul 2>nul && (
   python -m pip install -r "%DEST%\server\requirements.txt"
 ) || echo Python nao encontrado - instale Python 3.10+ para usar as funcoes de IA.
 echo.
-echo Pronto! Abra o After Effects: Window ^> Extensions ^> MotionFrame
+echo Pronto! Abra o After Effects: Window ^> Extensions ^> MagicTouch
 pause

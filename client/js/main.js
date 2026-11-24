@@ -1,4 +1,4 @@
-/* MotionFrame — lógica do painel */
+/* MagicTouch — lógica do painel */
 (function () {
   "use strict";
   var H = window.MFHost, D = window.MF_DATA;
@@ -14,14 +14,14 @@
     var req = H.nodeRequire, file = null, cache = {};
     if (req && H.userDataPath()) {
       try {
-        var path = req("path"), fs = req("fs"), dir = path.join(H.userDataPath(), "MotionFrame");
+        var path = req("path"), fs = req("fs"), dir = path.join(H.userDataPath(), "MagicTouch");
         fs.mkdirSync(dir, { recursive: true }); file = path.join(dir, "settings.json");
         if (fs.existsSync(file)) cache = JSON.parse(fs.readFileSync(file, "utf8"));
       } catch (e) { file = null; }
     }
-    if (!file) { try { cache = JSON.parse(localStorage.getItem("mf") || "{}"); } catch (e) { cache = {}; } }
+    if (!file) { try { cache = JSON.parse(localStorage.getItem("mt") || "{}"); } catch (e) { cache = {}; } }
     function save() {
-      try { if (file) req("fs").writeFileSync(file, JSON.stringify(cache)); else localStorage.setItem("mf", JSON.stringify(cache)); } catch (e) {}
+      try { if (file) req("fs").writeFileSync(file, JSON.stringify(cache)); else localStorage.setItem("mt", JSON.stringify(cache)); } catch (e) {}
     }
     return { get: function (k, d) { return cache[k] === undefined ? d : cache[k]; }, set: function (k, v) { cache[k] = v; save(); } };
   })();
@@ -46,21 +46,24 @@
 
   /* tiles da home + busca */
   var TOOLS = [
-    { v: "layer", t: "Layer", d: "Null, adjustment, cortar, reverter, freeze, speed ramp", k: "null solid split cortar reverse freeze ramp twixtor velocidade comp" },
-    { v: "keys", t: "Keyframes", d: "Presets e keyframes proporcionais ao clip", k: "keyframe proporcional preset ffx esticar" },
-    { v: "flow", t: "Flow", d: "Editor de curvas com presets salvos", k: "flow curva ease bezier grafico speed" },
-    { v: "motion", t: "Motion", d: "Animações, transições, shake, glitch", k: "motion bro animacao transicao shake glitch zoom pop texto" },
-    { v: "captions", t: "Legendas", d: "Auto legenda + face tracking", k: "legenda caption subtitle whisper tracking rosto cabeca" },
-    { v: "expr", t: "Expressões", d: "Biblioteca + copiar da seleção", k: "expressao expression wiggle loop typewriter" },
-    { v: "ai", t: "IA", d: "Remover fundo / partes / pessoas", k: "fundo background remover pessoa ia inpaint corpo braco cabeca" },
-    { v: "media", t: "Mídia", d: "YouTube, TikTok, Instagram...", k: "download baixar youtube tiktok instagram media musica" },
-    { v: "align", t: "Align", d: "Anchor point e centralizar", k: "anchor ancora alinhar centralizar fit fill" },
-    { v: "effects", t: "Efeitos", d: "Favoritos, efeito próprio, CC", k: "efeito fx glow blur cor cc lumetri proprio" },
-    { v: "organize", t: "Organizar", d: "Renomeia, colore e pré-compõe", k: "organizar projeto renomear cor pasta precompor" },
-    { v: "render", t: "Render", d: "Fila de render, sessão, IA", k: "render exportar prores sessao tempo servidor" }
+    { v: "links", i: "link", t: "Leitor de links", d: "Drive, Dropbox, .zip/.rar → importa tudo", k: "link drive dropbox zip rar importar projeto aep ai ffx pacote" },
+    { v: "pack", i: "box", t: "Presets .ffx", d: "Cria projeto com todos os presets", k: "ffx preset projeto automatico zip rar salvar exportar" },
+    { v: "missing", i: "alert", t: "Mídias ausentes", d: "Encontre e substitua offline", k: "missing midia ausente offline relink substituir" },
+    { v: "layer", i: "layers", t: "Layer", d: "Criar, cortar, freeze, speed ramp", k: "null solid split cortar reverse freeze ramp twixtor velocidade comp" },
+    { v: "keys", i: "diamond", t: "Keyframes", d: "Proporcionais ao clip", k: "keyframe proporcional preset ffx esticar" },
+    { v: "flow", i: "curve", t: "Flow", d: "Editor de curvas", k: "flow curva ease bezier grafico speed" },
+    { v: "motion", i: "sparkle", t: "Motion", d: "Animações e transições", k: "motion bro animacao transicao shake glitch zoom pop texto" },
+    { v: "captions", i: "cc", t: "Legendas", d: "Auto legenda + face track", k: "legenda caption subtitle whisper tracking rosto cabeca" },
+    { v: "expr", i: "braces", t: "Expressões", d: "Biblioteca + copiar", k: "expressao expression wiggle loop typewriter" },
+    { v: "ai", i: "wand", t: "IA", d: "Fundo, partes, pessoas", k: "fundo background remover pessoa ia inpaint corpo braco cabeca" },
+    { v: "media", i: "download", t: "Mídia", d: "YouTube, TikTok, Insta…", k: "download baixar youtube tiktok instagram media musica" },
+    { v: "align", i: "target", t: "Align", d: "Anchor e centralizar", k: "anchor ancora alinhar centralizar fit fill" },
+    { v: "effects", i: "sliders", t: "Efeitos", d: "Favoritos, próprio, cor", k: "efeito fx glow blur cor cc lumetri proprio" },
+    { v: "organize", i: "folder", t: "Organizar", d: "Renomeia, colore, pré-compõe", k: "organizar projeto renomear cor pasta precompor" },
+    { v: "render", i: "play", t: "Render", d: "Fila, projeto, sessão", k: "render exportar prores sessao tempo servidor cache versao" }
   ];
   $("#tiles").innerHTML = TOOLS.map(function (t) {
-    return '<button class="tile" data-go="' + t.v + '"><b>' + t.t + "</b><small>" + t.d + "</small></button>";
+    return '<button class="tile" data-go="' + t.v + '"><span class="ti">' + window.MT_ICON(t.i) + "</span><b>" + t.t + "</b><small>" + t.d + "</small></button>";
   }).join("");
   $$("#tiles .tile").forEach(function (b) { b.onclick = function () { go(b.dataset.go); }; });
   $("#search").addEventListener("input", function () {
@@ -100,7 +103,7 @@
     var cp = req("child_process"), path = req("path");
     var py = val("pyPath") || store.get("py") || (process.platform === "win32" ? "python" : "python3");
     store.set("py", py);
-    var script = path.join(H.extensionPath(), "server", "mf_server.py");
+    var script = path.join(H.extensionPath(), "server", "mt_server.py");
     try {
       srvProc = cp.spawn(py, [script], { detached: false, windowsHide: true });
       srvProc.on("exit", function () { srvProc = null; health(); });
@@ -189,7 +192,7 @@
   function drawCurve() {
     var w = cv.width, h = cv.height, i;
     cx.clearRect(0, 0, w, h);
-    cx.strokeStyle = "rgba(120,255,220,.08)"; cx.lineWidth = 1;
+    cx.strokeStyle = "rgba(255,255,255,.06)"; cx.lineWidth = 1;
     for (i = 0; i <= 4; i++) {
       var a = toPx(i / 4, 0), b = toPx(i / 4, 1); cx.beginPath(); cx.moveTo(a[0], a[1]); cx.lineTo(b[0], b[1]); cx.stroke();
       a = toPx(0, i / 4); b = toPx(1, i / 4); cx.beginPath(); cx.moveTo(a[0], a[1]); cx.lineTo(b[0], b[1]); cx.stroke();
@@ -197,10 +200,10 @@
     var p0 = toPx(0, 0), p1 = toPx(curve[0], curve[1]), p2 = toPx(curve[2], curve[3]), p3 = toPx(1, 1);
     cx.setLineDash([4, 4]); cx.strokeStyle = "rgba(255,255,255,.35)";
     cx.beginPath(); cx.moveTo(p0[0], p0[1]); cx.lineTo(p1[0], p1[1]); cx.moveTo(p3[0], p3[1]); cx.lineTo(p2[0], p2[1]); cx.stroke(); cx.setLineDash([]);
-    var g = cx.createLinearGradient(p0[0], 0, p3[0], 0); g.addColorStop(0, "#f5c542"); g.addColorStop(1, "#38f2c8");
-    cx.strokeStyle = g; cx.lineWidth = 4; cx.shadowColor = "#38f2c8"; cx.shadowBlur = 14;
+    var g = cx.createLinearGradient(p0[0], 0, p3[0], 0); g.addColorStop(0, "#c850ff"); g.addColorStop(1, "#3fe8ff");
+    cx.strokeStyle = g; cx.lineWidth = 4; cx.shadowColor = "#3fe8ff"; cx.shadowBlur = 14;
     cx.beginPath(); cx.moveTo(p0[0], p0[1]); cx.bezierCurveTo(p1[0], p1[1], p2[0], p2[1], p3[0], p3[1]); cx.stroke(); cx.shadowBlur = 0;
-    [[p0, "#f5c542", 7], [p3, "#f5c542", 7], [p1, "#38f2c8", 10], [p2, "#38f2c8", 10]].forEach(function (d) {
+    [[p0, "#c850ff", 7], [p3, "#c850ff", 7], [p1, "#3fe8ff", 10], [p2, "#3fe8ff", 10]].forEach(function (d) {
       cx.fillStyle = d[1]; cx.beginPath(); cx.arc(d[0][0], d[0][1], d[2], 0, Math.PI * 2); cx.fill();
     });
     $("#curveTxt").value = curve.map(function (v) { return v.toFixed(2); }).join(", ");
@@ -304,7 +307,7 @@
       return job("/facetrack", { path: m.path, start: rg.start, end: rg.end, step: +val("capStep") }, "#capBar", "#capMsg");
     }).then(function (t) {
       lastTrack = t;
-      return run("mf_createCaptions", { segments: [], media: lastMedia, style: capStyle(), track: t, offset: [num("capOffX"), num("capOffY")] }, "Null 'MF Face Track' criado — use como parent/expressão");
+      return run("mf_createCaptions", { segments: [], media: lastMedia, style: capStyle(), track: t, offset: [num("capOffX"), num("capOffY")] }, "Null 'MT Face Track' criado — use como parent/expressão");
     }).catch(function (e) { toast(e.message, true); });
   };
 
@@ -370,7 +373,7 @@
     return run("mf_exportFrame", { path: p }).then(function (r) { return r.path; });
   }
   function importResult(path, name) {
-    return run("mf_importFile", { path: path, addToComp: true, still: true, stillDur: 5, name: name, folder: "MF IA" }, "Importado: " + name);
+    return run("mf_importFile", { path: path, addToComp: true, still: true, stillDur: 5, name: name, folder: "MT IA" }, "Importado: " + name);
   }
   function removeBg(imgPromise) {
     var what = val("partPrompt").trim() || part;
@@ -399,7 +402,7 @@
     job("/download", { url: url, format: val("dlFmt"), maxHeight: +val("dlH"), folder: store.get("dlFolder") }, "#dlBar", "#dlMsg").then(function (r) {
       var h = store.get("dlHist", []); h.unshift({ title: r.title, path: r.path, url: url }); store.set("dlHist", h.slice(0, 30)); histUI();
       toast("Baixado: " + r.title);
-      if (chk("dlImport")) return run("mf_importFile", { path: r.path, addToComp: true, atCTI: true, folder: "MF Downloads" }, "Importado na comp");
+      if (chk("dlImport")) return run("mf_importFile", { path: r.path, addToComp: true, atCTI: true, folder: "MT Downloads" }, "Importado na comp");
     }).catch(function (e) { toast(e.message, true); $("#dlMsg").textContent = e.message; });
   }
   function fmtDur(s) { if (!s) return ""; s = Math.round(s); return Math.floor(s / 60) + ":" + ("0" + s % 60).slice(-2); }
@@ -428,7 +431,7 @@
     var h = store.get("dlHist", []);
     $("#dlHistory").innerHTML = h.length ? h.map(function (x, i) { return '<div class="item" data-i="' + i + '"><span>' + esc(x.title) + '</span><button class="mini" title="Importar">＋</button></div>'; }).join("") : '<div class="muted small">Nada ainda.</div>';
     $$("#dlHistory .item").forEach(function (it) {
-      $(".mini", it).onclick = function () { run("mf_importFile", { path: h[+it.dataset.i].path, addToComp: true, atCTI: true, folder: "MF Downloads" }, "Importado"); };
+      $(".mini", it).onclick = function () { run("mf_importFile", { path: h[+it.dataset.i].path, addToComp: true, atCTI: true, folder: "MT Downloads" }, "Importado"); };
     });
   }
   histUI();
@@ -499,5 +502,7 @@
   }, 1000);
   $("#btnSession").onclick = function () { go("render"); };
 
+  /* helpers compartilhados com magic.js */
+  window.MT = { run: run, job: job, toast: toast, store: store, post: post, ensureServer: ensureServer, go: go, esc: esc, $: $, $$: $$, val: val, num: num, chk: chk };
   go(store.get("view", "home"));
 })();

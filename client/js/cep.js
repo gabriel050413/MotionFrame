@@ -37,6 +37,11 @@
       var r = window.cep.fs.showOpenDialogEx(false, false, title || "Escolher arquivo", "", types || []);
       return Promise.resolve(r && r.data && r.data[0] ? r.data[0] : null);
     },
+    pickFiles: function (title, types) {
+      if (!window.cep || !window.cep.fs) return Promise.resolve([]);
+      var r = window.cep.fs.showOpenDialogEx(true, false, title || "Escolher arquivos", "", types || []);
+      return Promise.resolve(r && r.data ? r.data : []);
+    },
     listDir: function (dir) {
       if (!window.cep || !window.cep.fs) return [];
       var r = window.cep.fs.readdir(dir);
@@ -47,7 +52,7 @@
     },
     tmpDir: function () {
       var req = MF.nodeRequire;
-      if (req) { var os = req("os"), path = req("path"), fs = req("fs"); var d = path.join(os.tmpdir(), "MotionFrame"); try { fs.mkdirSync(d, { recursive: true }); } catch (e) {} return d; }
+      if (req) { var os = req("os"), path = req("path"), fs = req("fs"); var d = path.join(os.tmpdir(), "MagicTouch"); try { fs.mkdirSync(d, { recursive: true }); } catch (e) {} return d; }
       return "/tmp";
     }
   };

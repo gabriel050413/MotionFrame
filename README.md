@@ -1,56 +1,67 @@
-# MotionFrame — extensão para After Effects
+<p align="center"><img src="docs/logo.png" width="120" alt="MagicTouch"></p>
 
-Painel CEP (After Effects 2020+) que junta, num só lugar, ferramentas de mobilidade, animação e IA.
+# MagicTouch Extension — After Effects
+
+Painel CEP (After Effects 2020+) com visual "aurora glass" que junta ferramentas de mobilidade, animação, organização e IA.
 
 ![preview](docs/preview.png)
 
-## Funções
+## Novidades da v2
 
 | Aba | O que faz |
 |---|---|
-| **Layer** | Null, adjustment, solid, câmera, texto, pre-compor, cortar no CTI, trim início/fim, reverter clip, freeze frame, sequenciar layers, motion blur, texto → palavras, comp a partir do footage, **speed ramp** (estilo twixtor, com Timewarp opcional), presets de comp (9:16, 16:9, 1:1, 4K...) |
-| **Keyframes proporcionais** | Encaixa os keyframes no tamanho do clip: *esticar tudo*, *intro no início/outro no fim* ou *ocupar X% do clip*. Lista uma pasta de presets `.ffx`: ao aplicar, só os keyframes que o preset criou são reescalados para o clip. |
-| **Flow** | Editor de curva bezier (arrastar os pontos), presets prontos + presets salvos (clique direito apaga), espelhar, **ler** a curva dos keyframes selecionados e aplicar como temporal ease. |
-| **Motion Library** | Presets procedurais (sem precisar de arquivos): entradas, saídas, shake, bounce/inércia, glitch, flash, deep glow e **transições** (zoom, slide, whip pan, spin, flash, blur) feitas com adjustment layer + Transform + Motion Tile. Opção proporcional ao clip. |
-| **Legendas + Face Track** | Transcreve o áudio com Whisper (timestamps por palavra, vários idiomas, tradução para inglês), cria uma layer de texto por legenda em **Arial Bold, deep glow (usa o plugin Deep Glow se instalado; senão simula com 2 Glows) e drop shadow**, e faz **face tracking automático**: cria o null `MF Face Track` com sliders de Offset X/Y e Smooth, e as legendas seguem a cabeça. Dá para editar o texto antes de criar. |
-| **Expressões** | Biblioteca com ~30 expressões mais usadas (wiggle, loopOut, inércia, bounce, typewriter, contador, decode, fade automático, caixa que acompanha o texto...). **Copiar expressões da seleção** salva automaticamente as expressões das layers/props selecionadas (e manda para o clipboard). Editor + "Minhas". |
-| **IA** | **Remover fundo** do frame atual: objeto principal, corpo inteiro, cabeça, rosto, cabelo, braço, mão, perna, pé, tronco, roupa — ou **digite o que quer** (`cachorro`, `braço + mão`...). Pode manter ou remover a parte. **Remover pessoas/objetos** com inpainting (LaMa; OpenCV como reserva). O resultado é importado como PNG no CTI. |
-| **Mídia** | Baixa de YouTube, TikTok, Instagram, X, Vimeo e +1000 sites (yt-dlp) em MP4 H.264 (importa liso no AE), MP3 ou WAV; também **pesquisa** vídeos por nome. Importa direto na comp. |
-| **Align** | Grade 3×3 de **anchor point** (move a âncora sem deslocar a layer, compensando escala/rotação), alinhar/centralizar na comp, fit/fill/largura/altura. |
-| **Efeitos** | Efeitos favoritos com 1 clique, **efeito próprio** (salva a pilha de efeitos de uma layer — valores, keyframes e expressões — e reaplica em outras, com keyframes proporcionais), presets de cor (teal & orange, P&B, quente, frio, vibrante, faded, vinheta). |
-| **Organizar** | Lê a comp ativa ou todas, identifica cada layer (texto, shape, vídeo, imagem, sequência, áudio, null, adjustment, solid, precomp, câmera, luz), **renomeia** (`TXT \| Título`, `VIDEO \| clip01`, `SHP \| Circulo`...), **colore por tipo**, **pré-compõe** grupos e organiza o painel Project em pastas. |
-| **Render / Sessão** | Fila de render (H.264, ProRes, PNG), tempo de uso (hoje/mês/ano), status do servidor de IA. |
-| **Busca** | Campo no topo encontra qualquer ferramenta (Enter abre). |
+| **Leitor de links** | Cole um ou vários links de projeto (**Google Drive** arquivo ou pasta, **Dropbox**, **OneDrive**, link direto, YouTube/TikTok…) ou escolha um **.zip / .rar / .7z** ou uma pasta. Baixa, extrai (inclusive pacotes dentro de pacotes) e importa no projeto, organizado em `MagicTouch Import/<pacote>/`: **vídeos, áudios, imagens, .ai/.eps/.pdf, .psd, .aep** (projetos importados inteiros). Os **.ffx** viram automaticamente um projeto de presets e as **fontes** abrem para instalar. |
+| **Projeto de presets (.ffx)** | Selecione .ffx soltos, um .zip/.rar com presets, uma pasta ou um link do Drive. Cria **uma comp por preset com o nome do preset no centro** e o preset aplicado (no texto ou em adjustment layer, detectado automaticamente), com fundo degradê, nas mesmas subpastas do pacote (`MagicTouch Presets/<pacote>/…`). |
+| **Salvar .ffx do projeto** | Salva de uma vez todos os .ffx das comps criadas automaticamente numa pasta, com o nome atual de cada comp e mantendo as subpastas. Para um preset que você modificou, o botão "Salvar preset modificado" abre o "Save Animation Preset" do AE para a layer selecionada. |
+| **Mídias não encontradas** | Lista todas as mídias offline do projeto (com contador na barra lateral). Substitua **uma por uma** (escolhendo o arquivo) ou **todas de uma vez** escolhendo uma pasta: procura pelo nome em subpastas, opcionalmente aceita outra extensão, e reconecta sequências de imagens. Também pode trocar por placeholder. |
+| **Projeto** | Salvar nova versão (`_v02`, `_v03`…), reduzir projeto, remover não usados, consolidar, limpar cache e Collect Files. |
+
+## Todas as funções (da v1)
+
+| Aba | O que faz |
+|---|---|
+| **Layer** | Null, adjustment, solid, câmera, texto, pre-compor, cortar no CTI, trim, reverter, freeze, sequenciar, motion blur, texto → palavras, comp do footage, **speed ramp** (com Timewarp opcional), presets de comp. |
+| **Keyframes proporcionais** | Encaixa keyframes no tamanho do clip (esticar / intro+outro / % do clip). Presets .ffx de uma pasta aplicados proporcionalmente. |
+| **Flow** | Editor de curva bezier com presets, salvar, espelhar e ler dos keyframes. |
+| **Motion Library** | Entradas, saídas, shake, bounce, glitch, flash, deep glow e transições (zoom, slide, whip, spin, flash, blur). |
+| **Legendas + Face Track** | Whisper com timestamps por palavra; Arial Bold + deep glow + sombra seguindo a cabeça (null `MT Face Track` com Offset/Smooth). |
+| **Expressões** | ~30 expressões prontas + copiar automaticamente as expressões da seleção. |
+| **IA** | Remover fundo (objeto, corpo, cabeça, braço, perna… ou texto livre) e remover pessoas/objetos com inpainting. |
+| **Mídia** | Download de YouTube, TikTok, Instagram, X, Vimeo… + pesquisa por nome. |
+| **Align** | Grade 3×3 de anchor point, alinhar, fit/fill. |
+| **Efeitos** | Favoritos, efeito próprio (salva e reaplica pilhas de efeitos), presets de cor. |
+| **Organizar** | Identifica, renomeia, colore, pré-compõe e cria pastas. |
+| **Render / Sessão** | Fila de render, tempo de uso, status do servidor de IA. |
 
 ## Instalação
 
-1. **Windows:** execute `tools/install_windows.bat` · **macOS:** `bash tools/install_mac.sh`
-   (habilita extensões não assinadas — `PlayerDebugMode` — e copia a pasta para `CEP/extensions/MotionFrame`).
-2. Reabra o After Effects → **Window › Extensions › MotionFrame**.
-3. Para as funções de IA instale **Python 3.10–3.12** e as dependências:
-   `pip install -r server/requirements.txt`
-   O painel inicia o servidor sozinho (ou rode `tools/start_server.*`). Na aba **Render** você vê quais recursos estão disponíveis e pode definir o caminho do Python.
+1. **Windows:** `tools/install_windows.bat` · **macOS:** `bash tools/install_mac.sh`
+2. Reabra o After Effects → **Window › Extensions › MagicTouch**.
+3. Para IA, links e pacotes instale **Python 3.10–3.12** e `pip install -r server/requirements.txt` (o instalador já tenta). O painel inicia o servidor sozinho.
+   - `.zip` funciona sem nada extra; `.rar` usa `rarfile` + **7-Zip/unrar** instalado; `.7z` usa `py7zr` ou 7-Zip.
+   - Google Drive usa `gdown` (links públicos / "qualquer pessoa com o link").
 
-Sem Python, todas as ferramentas que não são de IA (keyframes, flow, motion, expressões, align, efeitos, organizador, render) funcionam normalmente.
-
-Na primeira vez, os modelos (Whisper, rembg, CLIPSeg, LaMa) são baixados automaticamente. Arquivos gerados ficam em `~/MotionFrame`.
+Sem Python: keyframes, flow, motion, expressões, align, efeitos, organizador, mídias ausentes, render e projeto de presets a partir de **.ffx soltos ou pasta** continuam funcionando.
 
 ## Estrutura
 
 ```
-CSXS/manifest.xml       manifesto CEP (AEFT 17+)
-client/                 painel (HTML/CSS/JS)
-  js/cep.js             ponte com o ExtendScript
-  js/data.js            bibliotecas: expressões, presets, curvas, efeitos
-  js/main.js            lógica das abas
-jsx/hostscript.jsx      todas as ações dentro do After Effects (funções mf_*)
-server/mf_server.py     servidor local de IA em 127.0.0.1:5717
-tools/                  instaladores e scripts de inicialização
+CSXS/manifest.xml        manifesto CEP (AEFT 17+)
+client/                  painel
+  img/logo.svg           logo (varinha + cartola)
+  js/cep.js              ponte com o ExtendScript
+  js/icons.js            ícones + barra lateral
+  js/data.js             expressões, presets, curvas, efeitos
+  js/main.js             abas da v1
+  js/magic.js            leitor de links, presets .ffx, mídias ausentes
+jsx/hostscript.jsx       ações no After Effects (funções mf_*)
+server/mt_server.py      servidor local (127.0.0.1:5717): IA, downloads, links, extração
+tools/                   instaladores
 ```
 
 ## Observações
 
-- Alguns parâmetros de efeitos são definidos pelo nome em inglês; no AE em outro idioma esses valores podem ficar no padrão (o efeito é adicionado mesmo assim).
-- Para usar o Deep Glow "de verdade" instale o plugin Deep Glow; senão o MotionFrame cria um glow duplo equivalente.
-- Baixe apenas mídias que você tem direito de usar.
-- O painel é inspirado nos fluxos mostrados nos vídeos de referência, mas a interface, os presets e o código são originais — não copiam o Motion Bro, o Flow nem outras extensões comerciais.
+- Um .ffx não pode ser gerado por script no AE; "Salvar todos os .ffx" copia o arquivo original de cada preset com o nome atual da comp. Alterações feitas dentro da comp precisam do "Save Animation Preset" (botão na aba).
+- Parâmetros de alguns efeitos são definidos pelo nome em inglês; em AE de outro idioma podem ficar no padrão.
+- Baixe apenas conteúdo que você tem direito de usar.
+- Interface, presets e código são originais (inspirados nos fluxos dos vídeos de referência, sem copiar extensões comerciais).

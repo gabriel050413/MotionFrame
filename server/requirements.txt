@@ -4,6 +4,11 @@ opencv-python>=4.8
 Pillow>=10.0
 numpy>=1.24
 
+# Leitor de links / pacotes (.zip nativo; .rar e .7z)
+gdown>=5.1
+rarfile>=4.1
+py7zr>=0.21
+
 # Legendas automáticas
 faster-whisper>=1.0.0
 imageio-ffmpeg>=0.5   # ffmpeg embutido (se não houver ffmpeg no PATH)

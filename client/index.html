@@ -2,86 +2,165 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<title>MotionFrame</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MagicTouch</title>
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+<div class="aurora"><i></i><i></i><i></i></div>
+<div class="grain"></div>
+
+<aside class="rail" id="nav"></aside>
+
+<div class="app">
 <header class="top">
-  <div class="brand"><span class="logo">MF</span><div><b>MotionFrame</b><small>v1.0 · AE toolkit</small></div></div>
-  <div class="status"><span id="srvDot" class="dot"></span><span id="srvTxt">IA offline</span>
-    <button class="icon" id="btnSession" title="Tempo de sessão">⏱ <span id="sessTime">00:00</span></button></div>
+  <div class="brand">
+    
+    <div><b class="grad">MagicTouch</b><small>Extension · v2.0</small></div>
+  </div>
+  <div class="status">
+    <span class="pill" id="srvPill"><span id="srvDot" class="dot"></span><span id="srvTxt">IA offline</span></span>
+    <button class="pill" id="btnSession" title="Tempo de sessão"><span class="ico" data-i="clock"></span><span id="sessTime">00:00</span></button>
+  </div>
 </header>
-<input id="search" class="search" placeholder="Pesquisar ferramenta... (ex: anchor, legenda, wiggle)">
+<div class="cmd"><span class="ico" data-i="search"></span><input id="search" placeholder="Buscar ferramenta…  (anchor, legenda, ffx, link)"><kbd>↵</kbd></div>
 
 <main id="views">
 
 <!-- HOME ------------------------------------------------------------>
 <section class="view active" data-view="home">
-  <div class="hero"><div class="orb">MF</div><h1>MotionFrame</h1><p>Ferramentas rápidas para After Effects em um único painel.</p>
-    <div id="compInfo" class="muted small">—</div></div>
+  <div class="hero glass">
+    <div class="hero-logo"><img src="img/logo.svg" alt=""><span class="spark s1"></span><span class="spark s2"></span><span class="spark s3"></span></div>
+    <h1><span class="grad">MagicTouch</span></h1>
+    <p>Todas as mágicas do After Effects em um painel.</p>
+    <div id="compInfo" class="chip-info">—</div>
+  </div>
   <div class="tiles" id="tiles"></div>
+</section>
+
+<!-- LINK / PACOTE --------------------------------------------------->
+<section class="view" data-view="links">
+  <div class="head"><span class="ico" data-i="link"></span><div><h2>Leitor de links</h2><p>Cole links de projeto (Google Drive, Dropbox, OneDrive, link direto, YouTube…). Baixa, extrai .zip/.rar/.7z e importa tudo no projeto.</p></div></div>
+  <div class="glass pad">
+    <textarea id="lnkUrls" rows="3" placeholder="https://drive.google.com/…&#10;https://www.dropbox.com/…&#10;(um link por linha)"></textarea>
+    <div class="row"><button class="primary grow" id="btnFetch"><span class="ico" data-i="wand"></span>Ler links e importar</button></div>
+    <div class="row"><button id="btnPickArchive"><span class="ico" data-i="box"></span>.zip / .rar / .7z</button><button id="btnPickFolderPack"><span class="ico" data-i="folder"></span>Pasta</button></div>
+    <div class="toggles">
+      <label class="tg"><input type="checkbox" id="lnkMedia" checked><span></span>Mídias</label>
+      <label class="tg"><input type="checkbox" id="lnkAep" checked><span></span>.aep</label>
+      <label class="tg"><input type="checkbox" id="lnkAi" checked><span></span>.ai / .psd</label>
+      <label class="tg"><input type="checkbox" id="lnkFfx" checked><span></span>.ffx → projeto</label>
+      <label class="tg"><input type="checkbox" id="lnkAiComp"><span></span>.ai como comp</label>
+      <label class="tg"><input type="checkbox" id="lnkFonts" checked><span></span>Abrir fontes</label>
+    </div>
+    <div class="progress"><div id="lnkBar"></div></div><div id="lnkMsg" class="muted small"></div>
+  </div>
+  <div id="lnkReport" class="kinds"></div>
+  <div id="lnkFiles" class="list"></div>
+</section>
+
+<!-- CRIADOR DE PROJETO .FFX ---------------------------------------->
+<section class="view" data-view="pack">
+  <div class="head"><span class="ico" data-i="box"></span><div><h2>Projeto de presets</h2><p>Selecione .ffx soltos, um .zip/.rar com presets ou um link do Drive. Cria uma comp por preset, com o nome do preset no centro e o preset aplicado.</p></div></div>
+  <div class="glass pad">
+    <div class="grid3">
+      <button id="btnFfxFiles"><span class="ico" data-i="file"></span>.ffx</button>
+      <button id="btnFfxArchive"><span class="ico" data-i="box"></span>.zip/.rar</button>
+      <button id="btnFfxFolder"><span class="ico" data-i="folder"></span>Pasta</button>
+    </div>
+    <div class="row"><input id="ffxLink" placeholder="ou cole um link do Drive/Dropbox com .ffx"><button id="btnFfxLink"><span class="ico" data-i="link"></span></button></div>
+    <div class="row">
+      <label>Formato <select id="ffxSize"><option value="1920x1080">16:9 · 1920×1080</option><option value="1080x1920">9:16 · 1080×1920</option><option value="1080x1080">1:1 · 1080</option><option value="3840x2160">4K</option></select></label>
+      <label>FPS <input type="number" id="ffxFps" value="30"></label>
+      <label>Duração <input type="number" id="ffxDur" value="5" step="0.5"></label>
+    </div>
+    <label>Aplicar em <select id="ffxMode"><option value="auto">Automático (texto ou adjustment pelo tipo)</option><option value="text">Texto com o nome do preset</option><option value="adjustment">Adjustment layer</option><option value="solid">Solid</option></select></label>
+    <div class="toggles">
+      <label class="tg"><input type="checkbox" id="ffxBg" checked><span></span>Fundo degradê</label>
+      <label class="tg"><input type="checkbox" id="ffxProp"><span></span>Keyframes proporcionais</label>
+    </div>
+    <div id="ffxQueue" class="queue muted small">Nenhum preset carregado.</div>
+    <button class="primary" id="btnBuildPack"><span class="ico" data-i="wand"></span>Criar projeto automático</button>
+    <div class="progress"><div id="ffxBar"></div></div><div id="ffxMsg" class="muted small"></div>
+  </div>
+  <div class="head small-head"><span class="ico" data-i="save"></span><div><h3>Salvar .ffx do projeto</h3><p>Salva todos os presets das comps criadas (com o nome atual de cada comp) numa pasta, mantendo as subpastas.</p></div></div>
+  <div class="glass pad">
+    <div class="row"><button id="btnListPresets">Atualizar lista</button><button class="primary grow" id="btnExportFfx"><span class="ico" data-i="save"></span>Salvar todos os .ffx</button></div>
+    <button id="btnSavePresetDlg" class="ghost">Salvar preset modificado (layer selecionada)…</button>
+    <div id="presetComps" class="list"></div>
+  </div>
+</section>
+
+<!-- MÍDIAS AUSENTES ------------------------------------------------>
+<section class="view" data-view="missing">
+  <div class="head"><span class="ico" data-i="alert"></span><div><h2>Mídias não encontradas</h2><p>Todas as mídias offline do projeto. Substitua uma por uma ou todas de uma vez procurando numa pasta.</p></div></div>
+  <div class="glass pad">
+    <div class="row"><button id="btnScanMissing" class="grow"><span class="ico" data-i="search"></span>Escanear projeto</button><button class="primary grow" id="btnRelinkAll"><span class="ico" data-i="folder"></span>Substituir todas (pasta)</button></div>
+    <div class="toggles">
+      <label class="tg"><input type="checkbox" id="misExt"><span></span>Aceitar outra extensão</label>
+      <label class="tg"><input type="checkbox" id="misSub" checked><span></span>Subpastas</label>
+    </div>
+    <div class="row"><button id="btnPlaceholderAll" class="ghost grow">Placeholder em todas</button><button id="btnSelAllMissing" class="ghost grow">Selecionar tudo</button></div>
+    <div id="misMsg" class="muted small"></div>
+  </div>
+  <div id="missingList" class="list tall"></div>
 </section>
 
 <!-- LAYER ----------------------------------------------------------->
 <section class="view" data-view="layer">
-  <h2>Layer</h2>
+  <div class="head"><span class="ico" data-i="layers"></span><div><h2>Layer</h2><p>Atalhos de criação, corte e tempo.</p></div></div>
   <div class="grid3">
     <button data-layer="null">Null</button><button data-layer="adjustment">Adjustment</button><button data-layer="solid">Solid</button>
     <button data-layer="camera">Câmera</button><button data-layer="text">Texto</button><button data-layer="precompose">Pre-compor</button>
     <button data-layer="split">Cortar no CTI</button><button data-layer="trimToCTI_in">Início → CTI</button><button data-layer="trimToCTI_out">Fim → CTI</button>
-    <button data-layer="reverse">Reverter clip</button><button data-layer="freeze">Freeze frame</button><button data-layer="sequence">Sequenciar</button>
+    <button data-layer="reverse">Reverter</button><button data-layer="freeze">Freeze</button><button data-layer="sequence">Sequenciar</button>
     <button data-layer="motionBlur">Motion blur</button><button data-layer="textToLines">Texto → palavras</button><button id="btnCompFromSel">Comp do footage</button>
   </div>
-  <h3>Speed ramp (estilo twixtor)</h3>
-  <div class="row"><label>Velocidade lenta <input type="number" id="rampSlow" value="0.25" step="0.05" min="0.05" max="1"></label>
-    <label>Duração (s) <input type="number" id="rampW" value="1" step="0.1"></label></div>
-  <label class="chk"><input type="checkbox" id="rampPM"> Adicionar Timewarp (pixel motion)</label>
-  <button class="primary" id="btnRamp">Aplicar speed ramp no CTI</button>
+  <h3>Speed ramp</h3>
+  <div class="glass pad">
+    <div class="row"><label>Velocidade <input type="number" id="rampSlow" value="0.25" step="0.05" min="0.05" max="1"></label>
+      <label>Duração (s) <input type="number" id="rampW" value="1" step="0.1"></label>
+      <label class="tg"><input type="checkbox" id="rampPM"><span></span>Timewarp</label></div>
+    <button class="primary" id="btnRamp">Aplicar speed ramp no CTI</button>
+  </div>
   <h3>Nova comp</h3>
   <div class="grid3">
     <button data-newcomp="1080x1920">9:16 Reels</button><button data-newcomp="1920x1080">16:9 HD</button><button data-newcomp="1080x1080">1:1</button>
-    <button data-newcomp="3840x2160">4K</button><button data-newcomp="1080x1350">4:5</button><button data-newcomp="2560x1080">Cinema 21:9</button>
+    <button data-newcomp="3840x2160">4K</button><button data-newcomp="1080x1350">4:5</button><button data-newcomp="2560x1080">21:9</button>
   </div>
 </section>
 
 <!-- KEYFRAMES PROPORCIONAIS ---------------------------------------->
 <section class="view" data-view="keys">
-  <h2>Keyframes proporcionais</h2>
-  <p class="muted">Faz os keyframes (de um preset, efeito ou animação sua) se esticarem/encolherem de acordo com o tamanho do clip.</p>
-  <label>Modo
-    <select id="fitMode">
-      <option value="stretch">Esticar tudo (início → fim do clip)</option>
-      <option value="intro_outro">Intro no início / outro no fim</option>
-      <option value="percent">Ocupar % do clip</option>
-    </select></label>
-  <div class="row"><label>% do clip <input type="number" id="fitPct" value="50" min="1" max="100"></label>
-    <label>Folga início (s) <input type="number" id="padIn" value="0" step="0.05"></label>
-    <label>Folga fim (s) <input type="number" id="padOut" value="0" step="0.05"></label></div>
-  <label class="chk"><input type="checkbox" id="fitOnlySel"> Só propriedades selecionadas</label>
-  <button class="primary" id="btnFit">Encaixar keyframes no clip</button>
-
-  <h3>Presets (.ffx) proporcionais</h3>
-  <p class="muted small">Escolha uma pasta com presets .ffx. Ao aplicar, os keyframes adicionados se ajustam ao clip.</p>
-  <div class="row"><button id="btnPresetFolder">Escolher pasta</button><label class="chk"><input type="checkbox" id="presetProp" checked> Proporcional</label></div>
+  <div class="head"><span class="ico" data-i="diamond"></span><div><h2>Keyframes proporcionais</h2><p>Keyframes de presets, efeitos ou animações se ajustam ao tamanho do clip.</p></div></div>
+  <div class="glass pad">
+    <label>Modo <select id="fitMode"><option value="stretch">Esticar tudo (início → fim do clip)</option><option value="intro_outro">Intro no início / outro no fim</option><option value="percent">Ocupar % do clip</option></select></label>
+    <div class="row"><label>% do clip <input type="number" id="fitPct" value="50" min="1" max="100"></label>
+      <label>Folga início <input type="number" id="padIn" value="0" step="0.05"></label>
+      <label>Folga fim <input type="number" id="padOut" value="0" step="0.05"></label></div>
+    <label class="tg"><input type="checkbox" id="fitOnlySel"><span></span>Só propriedades selecionadas</label>
+    <button class="primary" id="btnFit">Encaixar keyframes no clip</button>
+  </div>
+  <h3>Presets .ffx proporcionais</h3>
+  <div class="row"><button id="btnPresetFolder" class="grow"><span class="ico" data-i="folder"></span>Escolher pasta</button><label class="tg"><input type="checkbox" id="presetProp" checked><span></span>Proporcional</label></div>
   <div id="presetList" class="list"></div>
 </section>
 
 <!-- FLOW ----------------------------------------------------------->
 <section class="view" data-view="flow">
-  <h2>Flow · Curvas</h2>
+  <div class="head"><span class="ico" data-i="curve"></span><div><h2>Flow</h2><p>Arraste os pontos, aplique nos keyframes selecionados.</p></div></div>
   <div class="row"><input id="curveTxt" class="mono" value="0.33, 0.00, 0.67, 1.00"><button id="btnReadCurve" title="Ler curva dos keyframes selecionados">Ler</button></div>
   <canvas id="curve" width="600" height="400"></canvas>
-  <div class="row"><button class="primary" id="btnApplyCurve">Aplicar</button><button id="btnSaveCurve">Salvar preset</button><button id="btnMirror">Espelhar</button></div>
+  <div class="row"><button class="primary grow" id="btnApplyCurve">Aplicar</button><button id="btnSaveCurve">Salvar</button><button id="btnMirror">Espelhar</button></div>
   <div class="curves" id="curveList"></div>
-  <p class="muted small">Selecione 2+ keyframes (ou layers inteiras) e clique em Aplicar. Arraste os pontos ciano no gráfico.</p>
 </section>
 
 <!-- MOTION LIBRARY ------------------------------------------------->
 <section class="view" data-view="motion">
-  <h2>Motion Library</h2>
-  <div class="row"><label class="chk"><input type="checkbox" id="motProp" checked> Proporcional ao clip</label>
+  <div class="head"><span class="ico" data-i="sparkle"></span><div><h2>Motion Library</h2><p>Animações e transições com 1 clique.</p></div></div>
+  <div class="row"><label class="tg"><input type="checkbox" id="motProp" checked><span></span>Proporcional</label>
     <label>% <input type="number" id="motPct" value="20" min="1" max="100"></label>
-    <label>ou duração (s) <input type="number" id="motDur" value="0.5" step="0.05"></label></div>
+    <label>ou seg <input type="number" id="motDur" value="0.5" step="0.05"></label></div>
   <div class="tabs" id="motTabs"></div>
   <div class="cards" id="motCards"></div>
   <p class="muted small">Transições: selecione 2 clips (aplica no corte) ou nada (aplica no CTI).</p>
@@ -89,114 +168,123 @@
 
 <!-- LEGENDAS + TRACKING -------------------------------------------->
 <section class="view" data-view="captions">
-  <h2>Legendas automáticas + Face Track</h2>
-  <p class="muted small">Selecione a layer do vídeo na comp. Gera legendas estilo "edit de filme": Arial Bold, deep glow e sombra seguindo a cabeça.</p>
-  <div class="row"><label>Idioma <select id="capLang"><option value="">Auto</option><option value="pt">Português</option><option value="en">Inglês</option><option value="es">Espanhol</option><option value="fr">Francês</option><option value="de">Alemão</option><option value="ja">Japonês</option><option value="ar">Árabe</option></select></label>
-    <label>Modelo <select id="capModel"><option>tiny</option><option>base</option><option selected>small</option><option>medium</option><option>large-v3</option></select></label>
-    <label>Palavras/legenda <input type="number" id="capWords" value="3" min="1" max="12"></label></div>
-  <label class="chk"><input type="checkbox" id="capTranslate"> Traduzir para inglês</label>
+  <div class="head"><span class="ico" data-i="cc"></span><div><h2>Legendas + Face Track</h2><p>Arial Bold, deep glow e sombra seguindo a cabeça. Selecione a layer do vídeo.</p></div></div>
+  <div class="glass pad">
+    <div class="row"><label>Idioma <select id="capLang"><option value="">Auto</option><option value="pt">Português</option><option value="en">Inglês</option><option value="es">Espanhol</option><option value="fr">Francês</option><option value="de">Alemão</option><option value="ja">Japonês</option><option value="ar">Árabe</option></select></label>
+      <label>Modelo <select id="capModel"><option>tiny</option><option>base</option><option selected>small</option><option>medium</option><option>large-v3</option></select></label>
+      <label>Palavras <input type="number" id="capWords" value="3" min="1" max="12"></label></div>
+    <label class="tg"><input type="checkbox" id="capTranslate"><span></span>Traduzir para inglês</label>
+  </div>
   <h3>Estilo</h3>
-  <div class="row"><label>Fonte <input id="capFont" value="Arial-BoldMT"></label><label>Tamanho <input type="number" id="capSize" value="60"></label>
-    <label>Cor <input type="color" id="capColor" value="#ffffff"></label></div>
-  <div class="row"><label class="chk"><input type="checkbox" id="capGlow" checked> Deep glow</label><label class="chk"><input type="checkbox" id="capShadow" checked> Sombra</label>
-    <label class="chk"><input type="checkbox" id="capUpper"> MAIÚSCULAS</label><label>Contorno <input type="number" id="capStroke" value="0" min="0"></label>
-    <label>Anim <select id="capAnim"><option value="pop">Pop</option><option value="fade">Fade</option><option value="none">Nenhuma</option></select></label></div>
+  <div class="glass pad">
+    <div class="row"><label>Fonte <input id="capFont" value="Arial-BoldMT"></label><label>Tam. <input type="number" id="capSize" value="60"></label><label>Cor <input type="color" id="capColor" value="#ffffff"></label></div>
+    <div class="toggles"><label class="tg"><input type="checkbox" id="capGlow" checked><span></span>Deep glow</label><label class="tg"><input type="checkbox" id="capShadow" checked><span></span>Sombra</label><label class="tg"><input type="checkbox" id="capUpper"><span></span>MAIÚSCULAS</label></div>
+    <div class="row"><label>Contorno <input type="number" id="capStroke" value="0" min="0"></label><label>Anim <select id="capAnim"><option value="pop">Pop</option><option value="fade">Fade</option><option value="none">Nenhuma</option></select></label></div>
+  </div>
   <h3>Seguir a cabeça</h3>
-  <div class="row"><label class="chk"><input type="checkbox" id="capTrack" checked> Face tracking automático</label>
-    <label>Offset X <input type="number" id="capOffX" value="0"></label><label>Offset Y <input type="number" id="capOffY" value="220"></label>
-    <label>Precisão <select id="capStep"><option value="1">Todo frame</option><option value="2" selected>1 a cada 2</option><option value="4">1 a cada 4</option></select></label></div>
-  <button class="primary" id="btnCaptions">Gerar legendas</button>
-  <button id="btnTrackOnly">Só face track (cria null "MF Face Track")</button>
+  <div class="glass pad">
+    <label class="tg"><input type="checkbox" id="capTrack" checked><span></span>Face tracking automático</label>
+    <div class="row"><label>Offset X <input type="number" id="capOffX" value="0"></label><label>Offset Y <input type="number" id="capOffY" value="220"></label>
+      <label>Precisão <select id="capStep"><option value="1">Todo frame</option><option value="2" selected>1/2</option><option value="4">1/4</option></select></label></div>
+  </div>
+  <button class="primary" id="btnCaptions"><span class="ico" data-i="wand"></span>Gerar legendas</button>
+  <button id="btnTrackOnly" class="ghost">Só face track (null "MT Face Track")</button>
   <div class="progress"><div id="capBar"></div></div><div id="capMsg" class="muted small"></div>
-  <details><summary>Editar texto antes de criar</summary><textarea id="capEdit" class="mono" rows="8" placeholder="Depois da transcrição, edite aqui (formato: inicio|fim|texto) e clique em Criar."></textarea><button id="btnCapCreate">Criar a partir do texto</button></details>
+  <details class="glass pad"><summary>Editar texto antes de criar</summary><textarea id="capEdit" class="mono" rows="8" placeholder="inicio|fim|texto"></textarea><button id="btnCapCreate">Criar a partir do texto</button></details>
 </section>
 
 <!-- EXPRESSÕES ----------------------------------------------------->
 <section class="view" data-view="expr">
-  <h2>Expressões</h2>
-  <div class="row"><button id="btnCopyExpr" class="primary">Copiar expressões da seleção</button><button id="btnClearExpr">Limpar expressões</button></div>
+  <div class="head"><span class="ico" data-i="braces"></span><div><h2>Expressões</h2><p>Biblioteca + copiar automaticamente da seleção.</p></div></div>
+  <div class="row"><button id="btnCopyExpr" class="primary grow">Copiar da seleção</button><button id="btnClearExpr">Limpar</button></div>
   <div class="tabs" id="exprTabs"></div>
   <div id="exprList" class="list"></div>
   <h3>Editor</h3>
-  <input id="exprName" placeholder="Nome">
-  <textarea id="exprCode" class="mono" rows="6" placeholder="// cole ou edite uma expressão"></textarea>
-  <div class="row"><label>Alvo <select id="exprTarget"><option value="position">Position</option><option value="scale">Scale</option><option value="rotation">Rotation</option><option value="opacity">Opacity</option><option value="sourceText">Source Text</option><option value="anchor">Anchor</option></select></label>
-    <button class="primary" id="btnApplyExpr">Aplicar</button><button id="btnSaveExpr">Salvar em "Minhas"</button></div>
+  <div class="glass pad">
+    <input id="exprName" placeholder="Nome">
+    <textarea id="exprCode" class="mono" rows="6" placeholder="// cole ou edite uma expressão"></textarea>
+    <div class="row"><label>Alvo <select id="exprTarget"><option value="position">Position</option><option value="scale">Scale</option><option value="rotation">Rotation</option><option value="opacity">Opacity</option><option value="sourceText">Source Text</option><option value="anchor">Anchor</option></select></label>
+      <button class="primary grow" id="btnApplyExpr">Aplicar</button><button id="btnSaveExpr">Salvar</button></div>
+  </div>
 </section>
 
-<!-- IA: BACKGROUND / PESSOAS --------------------------------------->
+<!-- IA ------------------------------------------------------------->
 <section class="view" data-view="ai">
-  <h2>Remover fundo</h2>
-  <p class="muted small">Usa o frame atual (CTI) da comp. O resultado é importado como PNG acima das layers.</p>
-  <div class="chips" id="partChips"></div>
-  <div class="row"><input id="partPrompt" placeholder="ou digite: ex. 'cachorro', 'braço + mão', 'camisa'"></div>
-  <div class="row"><label class="chk"><input type="checkbox" id="bgInvert"> Remover a parte (em vez de manter)</label>
-    <label>Suavizar borda <input type="number" id="bgFeather" value="0" min="0" step="0.5"></label>
-    <label class="chk"><input type="checkbox" id="bgMask"> Salvar máscara</label></div>
-  <button class="primary" id="btnRemoveBg">Remover fundo do frame</button>
-  <button id="btnRemoveBgFile">…de um arquivo de imagem</button>
-
-  <h2>Remover pessoas / objetos</h2>
-  <div class="row"><input id="inpTarget" value="pessoas" placeholder="o que remover: pessoas, carro, texto, logo..."><label>Expandir <input type="number" id="inpGrow" value="15"></label></div>
-  <button class="primary" id="btnInpaint">Remover com IA (frame atual)</button>
-  <button id="btnInpaintFile">…de um arquivo de imagem</button>
+  <div class="head"><span class="ico" data-i="wand"></span><div><h2>Remover fundo</h2><p>Frame atual da comp → PNG importado acima das layers.</p></div></div>
+  <div class="glass pad">
+    <div class="chips" id="partChips"></div>
+    <input id="partPrompt" placeholder="ou digite: 'cachorro', 'braço + mão', 'camisa'…">
+    <div class="toggles"><label class="tg"><input type="checkbox" id="bgInvert"><span></span>Remover a parte</label><label class="tg"><input type="checkbox" id="bgMask"><span></span>Salvar máscara</label></div>
+    <div class="row"><label>Suavizar borda <input type="number" id="bgFeather" value="0" min="0" step="0.5"></label></div>
+    <button class="primary" id="btnRemoveBg">Remover fundo do frame</button>
+    <button id="btnRemoveBgFile" class="ghost">…de um arquivo de imagem</button>
+  </div>
+  <div class="head small-head"><span class="ico" data-i="eraser"></span><div><h3>Remover pessoas / objetos</h3></div></div>
+  <div class="glass pad">
+    <div class="row"><input id="inpTarget" value="pessoas" placeholder="pessoas, carro, texto, logo…"><label>Expandir <input type="number" id="inpGrow" value="15"></label></div>
+    <button class="primary" id="btnInpaint">Remover com IA</button>
+    <button id="btnInpaintFile" class="ghost">…de um arquivo de imagem</button>
+  </div>
   <div class="progress"><div id="aiBar"></div></div><div id="aiMsg" class="muted small"></div>
 </section>
 
 <!-- MEDIA DOWNLOADER ----------------------------------------------->
 <section class="view" data-view="media">
-  <h2>Baixar mídia</h2>
-  <div class="row"><input id="dlUrl" placeholder="Cole o link (YouTube, TikTok, Instagram, X, Vimeo...) ou pesquise"><button class="primary" id="btnDl">⬇</button></div>
-  <div class="row"><label>Formato <select id="dlFmt"><option value="mp4">MP4 vídeo</option><option value="mp3">MP3 áudio</option><option value="wav">WAV áudio</option></select></label>
+  <div class="head"><span class="ico" data-i="download"></span><div><h2>Baixar mídia</h2><p>YouTube, TikTok, Instagram, X, Vimeo… ou pesquise pelo nome.</p></div></div>
+  <div class="row"><input id="dlUrl" placeholder="Link ou pesquisa"><button class="primary" id="btnDl"><span class="ico" data-i="download"></span></button></div>
+  <div class="row"><label>Formato <select id="dlFmt"><option value="mp4">MP4</option><option value="mp3">MP3</option><option value="wav">WAV</option></select></label>
     <label>Qualidade <select id="dlH"><option>2160</option><option selected>1080</option><option>720</option><option>480</option></select></label>
-    <label class="chk"><input type="checkbox" id="dlImport" checked> Importar na comp</label></div>
-  <div class="row"><button id="btnDlFolder">Pasta de destino</button><span id="dlFolder" class="muted small">padrão: ~/MotionFrame/Downloads</span></div>
+    <label class="tg"><input type="checkbox" id="dlImport" checked><span></span>Importar</label></div>
+  <div class="row"><button id="btnDlFolder" class="ghost">Pasta de destino</button><span id="dlFolder" class="muted small">~/MagicTouch/Downloads</span></div>
   <div class="progress"><div id="dlBar"></div></div><div id="dlMsg" class="muted small"></div>
   <div id="dlResults" class="results"></div>
   <h3>Recentes</h3><div id="dlHistory" class="list"></div>
-  <p class="muted small">Baixe apenas conteúdo que você tem direito de usar.</p>
 </section>
 
-<!-- ALIGN / ANCHOR ------------------------------------------------->
+<!-- ALIGN ---------------------------------------------------------->
 <section class="view" data-view="align">
-  <h2>Anchor point</h2>
-  <div class="anchor" id="anchorGrid"></div>
-  <h2>Alinhar à comp</h2>
+  <div class="head"><span class="ico" data-i="target"></span><div><h2>Anchor & Align</h2><p>Move o anchor sem deslocar a layer.</p></div></div>
+  <div class="anchor glass" id="anchorGrid"></div>
+  <h3>Alinhar à comp</h3>
   <div class="grid3">
-    <button data-align='{"h":"left"}'>⇤ Esquerda</button><button data-align='{"h":"center"}'>↔ Centro H</button><button data-align='{"h":"right"}'>Direita ⇥</button>
-    <button data-align='{"v":"top"}'>⤒ Topo</button><button data-align='{"v":"center"}'>↕ Centro V</button><button data-align='{"v":"bottom"}'>Base ⤓</button>
+    <button data-align='{"h":"left"}'>Esquerda</button><button data-align='{"h":"center"}'>Centro H</button><button data-align='{"h":"right"}'>Direita</button>
+    <button data-align='{"v":"top"}'>Topo</button><button data-align='{"v":"center"}'>Centro V</button><button data-align='{"v":"bottom"}'>Base</button>
   </div>
   <button class="primary" data-align='{"h":"center","v":"center"}'>Centralizar tudo</button>
-  <h2>Ajustar à comp</h2>
+  <h3>Ajustar à comp</h3>
   <div class="grid3"><button data-fit="fit">Fit</button><button data-fit="fill">Fill</button><button data-fit="width">Largura</button><button data-fit="height">Altura</button></div>
 </section>
 
 <!-- EFEITOS -------------------------------------------------------->
 <section class="view" data-view="effects">
-  <h2>Efeitos</h2>
+  <div class="head"><span class="ico" data-i="sliders"></span><div><h2>Efeitos</h2><p>Favoritos, efeito próprio e cor.</p></div></div>
   <div class="chips" id="fxChips"></div>
-  <div class="row"><input id="fxName" placeholder="Nome/matchName do efeito"><button id="btnAddFx">Adicionar</button><button id="btnRemoveFx">Remover todos</button></div>
-  <h2>Criar efeito próprio</h2>
-  <p class="muted small">Monte efeitos numa layer (valores, keyframes e expressões) e salve como um efeito seu. Aplicar recria tudo em outras layers.</p>
-  <div class="row"><input id="myFxName" placeholder="Nome do seu efeito"><button class="primary" id="btnCaptureFx">Salvar da layer</button></div>
-  <label class="chk"><input type="checkbox" id="myFxProp" checked> Keyframes proporcionais ao clip ao aplicar</label>
-  <div id="myFxList" class="list"></div>
-  <h2>Color (CC)</h2>
-  <label class="chk"><input type="checkbox" id="ccAdj" checked> Como adjustment layer</label>
+  <div class="row"><input id="fxName" placeholder="Nome/matchName do efeito"><button id="btnAddFx">Adicionar</button><button id="btnRemoveFx" class="ghost">Remover todos</button></div>
+  <h3>Efeito próprio</h3>
+  <div class="glass pad">
+    <div class="row"><input id="myFxName" placeholder="Nome do seu efeito"><button class="primary" id="btnCaptureFx">Salvar da layer</button></div>
+    <label class="tg"><input type="checkbox" id="myFxProp" checked><span></span>Keyframes proporcionais ao aplicar</label>
+    <div id="myFxList" class="list"></div>
+  </div>
+  <h3>Color</h3>
+  <label class="tg"><input type="checkbox" id="ccAdj" checked><span></span>Como adjustment layer</label>
   <div class="grid3" id="ccGrid"></div>
 </section>
 
 <!-- ORGANIZADOR ---------------------------------------------------->
 <section class="view" data-view="organize">
-  <h2>Organizador de projeto</h2>
-  <p class="muted small">Lê o projeto, identifica cada layer (texto, shape, vídeo, imagem, áudio, null, adjustment...), renomeia, colore e pré-compõe.</p>
-  <label>Escopo <select id="orgScope"><option value="active">Comp ativa</option><option value="all">Todas as comps</option></select></label>
-  <label class="chk"><input type="checkbox" id="orgRename" checked> Renomear layers (ex: "TXT | Título")</label>
-  <label class="chk"><input type="checkbox" id="orgColor" checked> Cor por tipo</label>
-  <label class="chk"><input type="checkbox" id="orgFolders" checked> Organizar painel Project em pastas</label>
-  <label class="chk"><input type="checkbox" id="orgUnused"> Remover footage não usado</label>
-  <label>Pré-compor <select id="orgPrecomp"><option value="none">Não</option><option value="runs" selected>Grupos vizinhos do mesmo tipo</option><option value="type">Tudo por tipo (pode mudar a ordem)</option></select></label>
-  <button class="primary" id="btnOrganize">Organizar</button>
+  <div class="head"><span class="ico" data-i="folder"></span><div><h2>Organizador</h2><p>Identifica, renomeia, colore e pré-compõe cada layer.</p></div></div>
+  <div class="glass pad">
+    <label>Escopo <select id="orgScope"><option value="active">Comp ativa</option><option value="all">Todas as comps</option></select></label>
+    <div class="toggles">
+      <label class="tg"><input type="checkbox" id="orgRename" checked><span></span>Renomear</label>
+      <label class="tg"><input type="checkbox" id="orgColor" checked><span></span>Cor por tipo</label>
+      <label class="tg"><input type="checkbox" id="orgFolders" checked><span></span>Pastas no Project</label>
+      <label class="tg"><input type="checkbox" id="orgUnused"><span></span>Remover não usados</label>
+    </div>
+    <label>Pré-compor <select id="orgPrecomp"><option value="none">Não</option><option value="runs" selected>Grupos vizinhos do mesmo tipo</option><option value="type">Tudo por tipo</option></select></label>
+    <button class="primary" id="btnOrganize"><span class="ico" data-i="wand"></span>Organizar</button>
+  </div>
   <div id="orgReport" class="report"></div>
   <div class="legend">
     <span style="--c:#e8d84a">Texto</span><span style="--c:#5b8fd8">Shape</span><span style="--c:#9b6ad1">Vídeo</span><span style="--c:#4ab07a">Imagem</span>
@@ -204,40 +292,32 @@
   </div>
 </section>
 
-<!-- RENDER / SESSION / MAIS ---------------------------------------->
+<!-- RENDER / PROJETO / SESSÃO -------------------------------------->
 <section class="view" data-view="render">
-  <h2>Render</h2>
+  <div class="head"><span class="ico" data-i="play"></span><div><h2>Render & Projeto</h2><p>Fila de render, manutenção e sessão.</p></div></div>
   <div class="grid3"><button data-render="h264">MP4/H.264</button><button data-render="prores">ProRes</button><button data-render="png">PNG seq</button></div>
-  <label class="chk"><input type="checkbox" id="rndStart"> Renderizar imediatamente</label>
-  <h2>Sessão</h2>
-  <div class="stats"><div><b id="stToday">0m</b><small>hoje</small></div><div><b id="stMonth">0h</b><small>mês</small></div><div><b id="stYear">0h</b><small>ano</small></div></div>
-  <h2>Servidor de IA</h2>
+  <label class="tg"><input type="checkbox" id="rndStart"><span></span>Renderizar imediatamente</label>
+  <h3>Projeto</h3>
+  <div class="grid3">
+    <button data-proj="save_inc">Salvar +1 versão</button><button data-proj="reduce">Reduzir projeto</button><button data-proj="unused">Remover não usados</button>
+    <button data-proj="consolidate">Consolidar</button><button data-proj="purge">Limpar cache</button><button data-proj="collect">Collect files</button>
+  </div>
+  <h3>Sessão</h3>
+  <div class="stats"><div class="glass"><b id="stToday">0m</b><small>hoje</small></div><div class="glass"><b id="stMonth">0h</b><small>mês</small></div><div class="glass"><b id="stYear">0h</b><small>ano</small></div></div>
+  <h3>Servidor de IA</h3>
   <div id="health" class="report small"></div>
-  <div class="row"><button id="btnStartSrv" class="primary">Iniciar servidor</button><button id="btnHealth">Verificar</button></div>
+  <div class="row"><button id="btnStartSrv" class="primary grow">Iniciar servidor</button><button id="btnHealth">Verificar</button></div>
   <label>Python <input id="pyPath" placeholder="python3 (ou caminho completo)"></label>
 </section>
 
 </main>
-
-<nav class="bottom" id="nav">
-  <button data-go="home" title="Início">⌂</button>
-  <button data-go="layer" title="Layer">▤</button>
-  <button data-go="keys" title="Keyframes proporcionais">◆</button>
-  <button data-go="flow" title="Flow">∫</button>
-  <button data-go="motion" title="Motion Library">✦</button>
-  <button data-go="captions" title="Legendas + Tracking">CC</button>
-  <button data-go="expr" title="Expressões">{ }</button>
-  <button data-go="ai" title="IA: fundo / pessoas">✂</button>
-  <button data-go="media" title="Baixar mídia">⬇</button>
-  <button data-go="align" title="Anchor / alinhar">✛</button>
-  <button data-go="effects" title="Efeitos / CC">fx</button>
-  <button data-go="organize" title="Organizador">☰</button>
-  <button data-go="render" title="Render / sessão">▶</button>
-</nav>
+</div>
 <div id="toast"></div>
 
 <script src="js/cep.js"></script>
 <script src="js/data.js"></script>
+<script src="js/icons.js"></script>
 <script src="js/main.js"></script>
+<script src="js/magic.js"></script>
 </body>
 </html>

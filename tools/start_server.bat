@@ -1,3 +1,3 @@
 @echo off
-python "%~dp0..\server\mf_server.py"
+python "%~dp0..\server\mt_server.py"
 pause
