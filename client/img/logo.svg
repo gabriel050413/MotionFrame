@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="mtg" x1="6" y1="58" x2="58" y2="8" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7C5CFF"/><stop offset=".55" stop-color="#C850FF"/><stop offset="1" stop-color="#3FE8FF"/>
+    </linearGradient>
+  </defs>
+  <!-- cartola -->
+  <path d="M32 26.5c0-1.4 1.1-2.5 2.5-2.5h13c1.4 0 2.5 1.1 2.5 2.5L49 47H33z" stroke="url(#mtg)" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M33.4 40h15.2" stroke="url(#mtg)" stroke-width="3" stroke-linecap="round"/>
+  <path d="M27 49.5c0-1.4 1.1-2.5 2.5-2.5h23c1.4 0 2.5 1.1 2.5 2.5v0c0 1.4-1.1 2.5-2.5 2.5h-23c-1.4 0-2.5-1.1-2.5-2.5z" stroke="url(#mtg)" stroke-width="3"/>
+  <!-- varinha -->
+  <path d="M9 55L24 31" stroke="url(#mtg)" stroke-width="3.6" stroke-linecap="round"/>
+  <path d="M24 31l2.6-4.2" stroke="#fff" stroke-width="3.6" stroke-linecap="round"/>
+  <!-- brilho -->
+  <path d="M29.5 9.5c.5 3.3 1.7 4.5 5 5-3.3.5-4.5 1.7-5 5-.5-3.3-1.7-4.5-5-5 3.3-.5 4.5-1.7 5-5z" fill="#fff"/>
+  <circle cx="20" cy="15" r="1.4" fill="#3FE8FF"/>
+  <circle cx="37.5" cy="20" r="1.1" fill="#C850FF"/>
+</svg>

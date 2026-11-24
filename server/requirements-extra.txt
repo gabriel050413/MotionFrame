@@ -1,0 +1,5 @@
+# Opcionais
+# Face tracking mais preciso (sem ele usa OpenCV) — só Python 3.10 a 3.12
+mediapipe>=0.10,<0.11 ; python_version < "3.13"
+# Extrair .7z sem o 7-Zip instalado — Python 3.10 a 3.13
+py7zr>=0.21 ; python_version < "3.14"
