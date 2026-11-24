@@ -25,7 +25,7 @@
   function openWithOS(file) {
     if (!req) return H.openURL("file://" + file);
     var cp = req("child_process");
-    if (process.platform === "win32") cp.exec('start "" "' + file + '"');
+    if (window.MTServer.platform() === "win32") cp.exec('start "" "' + file + '"');
     else cp.exec('open "' + file.replace(/"/g, '\\"') + '"');
   }
 

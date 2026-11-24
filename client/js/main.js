@@ -85,92 +85,71 @@
   }
 
   /* ---------------- Servidor de IA ---------------- */
-  var srvOnline = false, srvProc = null;
+  var S = window.MTServer, srvOnline = false, starting = null;
+  function srvLog(line) {
+    var el = $("#srvLog"); if (!el) return;
+    el.textContent = (el.textContent + line + "\n").split("\n").slice(-80).join("\n");
+    el.scrollTop = el.scrollHeight;
+  }
   function health() {
-    return fetch(SRV + "/health").then(function (r) { return r.json(); }).then(function (h) {
+    return S.http("GET", "/health", undefined, 3000).then(function (h) {
       srvOnline = true; $("#srvDot").className = "dot on"; $("#srvTxt").textContent = "IA online";
-      $("#health").innerHTML = Object.keys(h.features).map(function (k) { return '<span class="' + (h.features[k] ? "y" : "n") + '">' + k + "</span>"; }).join(" ") + "<br>Saída: " + h.out;
+      $("#health").innerHTML = Object.keys(h.features).map(function (k) { return '<span class="' + (h.features[k] ? "y" : "n") + '">' + k + "</span>"; }).join(" ") + "<br>Saída: " + esc(h.out);
       return h;
     }).catch(function () {
-      srvOnline = false; $("#srvDot").className = "dot"; $("#srvTxt").textContent = "IA offline";
-      $("#health").textContent = "Servidor parado. Clique em Iniciar (veja README para instalar as dependências).";
+      srvOnline = false; $("#srvDot").className = "dot"; $("#srvTxt").textContent = starting ? "Iniciando IA..." : "IA offline";
+      if (!starting) $("#health").textContent = "Servidor parado. Clique em Iniciar (veja README para instalar as dependências).";
     });
   }
-  /* tenta vários comandos de Python até um funcionar.
-     No Windows prefere o launcher "py" com 3.12/3.11 (versões com todas as dependências prontas). */
-  function pyCandidates() {
-    var custom = val("pyPath") || store.get("py");
-    var list = custom ? [custom] : [];
-    if (process.platform === "win32") list = list.concat(["py", "python", "py -3.12", "py -3.11"]);
-    else list = list.concat(["python3.12", "python3.11", "python3", "python"]);
-    return list.filter(function (c, i) { return list.indexOf(c) === i; });
-  }
-  function splitCmd(c) {
-    var fs = H.nodeRequire("fs");
-    if (fs.existsSync(c)) return [c, []];          // caminho completo com espaços
-    var parts = c.trim().split(/\s+/);
-    return [parts[0], parts.slice(1)];
-  }
   function startServer() {
-    var req = H.nodeRequire;
-    if (!req) return toast("Node não disponível — rode server/start_server manualmente.", true);
-    if (srvProc) return toast("Servidor já iniciado.");
-    var cp = req("child_process"), path = req("path");
-    var script = path.join(H.extensionPath(), "server", "mt_server.py");
-    var cands = pyCandidates(), i = 0, lastErr = "";
-    toast("Iniciando servidor de IA...");
-    (function tryNext() {
-      if (i >= cands.length) { srvProc = null; return toast("Falha ao iniciar Python: " + (lastErr || "Python não encontrado"), true); }
-      var c = cands[i++], sc = splitCmd(c), started = Date.now(), proc;
-      try { proc = cp.spawn(sc[0], sc[1].concat([script]), { detached: false, windowsHide: true }); }
-      catch (e) { lastErr = e.message; return tryNext(); }
-      srvProc = proc;
-      var errBuf = "";
-      proc.stderr && proc.stderr.on("data", function (d) { errBuf += d; });
-      proc.on("error", function (e) { lastErr = c + ": " + e.message; if (srvProc === proc) srvProc = null; tryNext(); });
-      proc.on("exit", function (code) {
-        if (srvProc === proc) srvProc = null;
-        if (Date.now() - started < 4000 && code) { lastErr = c + ": " + (errBuf.trim().split("\n").pop() || "código " + code); tryNext(); }
-        else health();
+    if (starting) return starting;
+    var path = H.nodeRequire ? H.nodeRequire("path") : null;
+    var script = path ? path.join(H.extensionPath(), "server", "mt_server.py") : "";
+    $("#srvTxt").textContent = "Iniciando IA...";
+    srvLog("— " + new Date().toLocaleTimeString() + " · pasta da extensão: " + H.extensionPath());
+    starting = new Promise(function (resolve, reject) {
+      S.start({
+        script: script, python: val("pyPath") || store.get("py"), log: srvLog,
+        onReady: function (cmd) { if (cmd) store.set("py", cmd); starting = null; health(); resolve(); },
+        onFail: function (msg) { starting = null; health(); toast("Falha ao iniciar Python: " + msg, true); reject(new Error("Falha ao iniciar Python: " + msg)); }
       });
-      setTimeout(function () { if (srvProc === proc) { store.set("py", c); health(); } }, 2500);
-    })();
+    });
+    starting.catch(function () {});
+    return starting;
   }
   function ensureServer() {
     if (srvOnline) return Promise.resolve();
-    return health().then(function () {
-      if (srvOnline) return;
-      startServer();
-      return new Promise(function (res, rej) {
-        var n = 0, t = setInterval(function () {
-          health().then(function () { if (srvOnline) { clearInterval(t); res(); } else if (++n > 20) { clearInterval(t); rej(new Error("Servidor de IA não respondeu.")); } });
-        }, 1000);
-      });
-    });
+    return health().then(function () { if (!srvOnline) return startServer(); });
   }
   function post(route, body) {
-    return fetch(SRV + route, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
-      .then(function (r) { return r.json(); }).then(function (j) { if (j.error) throw new Error(j.error); return j; });
+    return S.http("POST", route, body, 60000).then(function (j) { if (j.error) throw new Error(j.error); return j; });
   }
   /* inicia job e acompanha com barra de progresso */
   function job(route, body, bar, msg) {
     return ensureServer().then(function () { return post(route, body); }).then(function (j) {
       return new Promise(function (resolve, reject) {
-        var t = setInterval(function () {
-          fetch(SRV + "/job/" + j.job).then(function (r) { return r.json(); }).then(function (s) {
+        var fails = 0, t = setInterval(function () {
+          S.http("GET", "/job/" + j.job, undefined, 5000).then(function (s) {
+            fails = 0;
             if (bar) $(bar).style.width = (s.progress || 0) + "%";
             if (msg) $(msg).textContent = s.message || "";
             if (s.status === "done") { clearInterval(t); resolve(s.result); }
             if (s.status === "error") { clearInterval(t); reject(new Error(s.error)); }
-          }).catch(function (e) { clearInterval(t); reject(e); });
-        }, 600);
+          }).catch(function (e) { if (++fails > 5) { clearInterval(t); reject(e); } });
+        }, 700);
       });
     });
   }
-  $("#btnStartSrv").onclick = startServer;
-  $("#btnHealth").onclick = health;
+  $("#btnStartSrv").onclick = function () { startServer().then(function () { toast("IA online"); }); };
+  $("#btnHealth").onclick = function () {
+    health();
+    var cmd = val("pyPath") || store.get("py") || S.candidates()[0];
+    S.pythonVersion(cmd, function (v) { srvLog("Python (" + cmd + "): " + (v || "não encontrado")); });
+  };
   $("#pyPath").value = store.get("py", "");
-  health(); setInterval(health, 15000);
+  /* inicia sozinho ao abrir o painel no After Effects */
+  health().then(function () { if (!srvOnline && H.inAE && H.nodeRequire && store.get("autoAI", true)) startServer(); });
+  setInterval(function () { if (!starting) health(); }, 15000);
 
   /* ---------------- LAYER ---------------- */
   $$("[data-layer]").forEach(function (b) {

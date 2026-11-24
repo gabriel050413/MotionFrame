@@ -114,7 +114,7 @@ Baixe o ZIP novo (ou `git pull`) e rode o instalador de novo. Suas expressões, 
 | **`metadata-generation-failed` … `numpy`** no pip | Versão anterior pedia um pacote que exigia numpy antigo. Baixe a versão nova e rode `python -m pip install --prefer-binary -r server\requirements.txt` de novo. Se persistir, rode `python --version` e mande o resultado. |
 | **"Abra/selecione uma composição"** | Clique na timeline da comp antes de usar a ferramenta. |
 | **Exportar frame / salvar .ffx falha** | Marque "Allow Scripts to Write Files and Access Network" (item 3). |
-| **IA offline** | Item 4: confira o Python no PATH ou informe o caminho completo na aba Render. Para ver erros, rode `tools/start_server` manualmente e deixe a janela aberta. |
+| **IA offline** | O painel agora inicia o servidor sozinho. Abra a aba **Render › Log do servidor**: ele mostra cada Python tentado e o erro. Se aparecer "comando não encontrado", instale o Python marcando "Add python.exe to PATH" ou cole o caminho completo do `python.exe` no campo **Python** (ex.: `C:\Users\VOCÊ\AppData\Local\Programs\Python\Python312\python.exe`) e clique **Iniciar servidor**. Também dá para rodar `tools\start_server.bat` (da pasta baixada) e ver o erro na janela. |
 | **"Dependência ausente: …"** | Rode `pip install -r server/requirements.txt` de novo. |
 | **Erro ao extrair .rar** | Instale o 7-Zip (item 4.3). |
 | **Link do Google Drive não baixa** | O arquivo/pasta precisa estar como "Qualquer pessoa com o link". Pastas muito grandes (+50 arquivos) podem precisar ser baixadas em partes. |

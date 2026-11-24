@@ -240,3 +240,6 @@ label:not(.tg) > input, label:not(.tg) > select { margin-top: 0; }
   background-color: transparent; background-position: right 2px center; background-size: 10px; box-shadow: none !important; cursor: pointer; }
 .pill, .brand small { white-space: nowrap; }
 .top { gap: 8px; } .status { flex-wrap: nowrap; min-width: 0; }
+
+.log { margin: 0; max-height: 180px; overflow: auto; padding: 9px; border-radius: 10px; background: rgba(0,0,0,.4); border: 1px solid var(--line);
+  font: 10.5px/1.45 "JetBrains Mono", Consolas, monospace; color: var(--mut); white-space: pre-wrap; word-break: break-all; }
